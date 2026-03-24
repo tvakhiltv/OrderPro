@@ -180,13 +180,20 @@ body { background: #111; display: flex; justify-content: center; align-items: ce
   overflow: hidden;
 }
 .pc:active { background: var(--surface-container-low); }
-.pc.inc { border: 2px solid var(--primary); }
+.pc.inc { border: 3px solid var(--primary); }
 .pc[data-c]::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
 .pc[data-c="v"]::before { background: #B86DFA; }
 .pc[data-c="t"]::before { background: #03B5B8; }
 .pc[data-c="p"]::before { background: #E77482; }
 .pc[data-c="a"]::before { background: #78350F; }
 .pc.inc[data-c]::before { display: none; }
+.pc-counter {
+  position: absolute; top: -3px; right: -3px; background: var(--primary); color: #fff;
+  min-width: 20px; max-width: 34px; padding: 2px 6px; border-radius: 0 6px 0 8px;
+  font-size: 12px; font-weight: 600; text-align: center; letter-spacing: 0.5px; line-height: 16px;
+  display: none; z-index: 2;
+}
+.pc.inc .pc-counter { display: block; }
 .pn { font-size: 16px; font-weight: 500; color: #000; letter-spacing: 0.15px; line-height: 24px; }
 .pb { display: flex; justify-content: space-between; align-items: center; }
 .pp { font-size: 12px; font-weight: 400; color: var(--on-surface-variant); letter-spacing: 0.4px; line-height: 16px; }
@@ -670,47 +677,95 @@ body { background: #111; display: flex; justify-content: center; align-items: ce
 <!-- ===== S: MENU ===== -->
 <div class="scr active" id="s-menu">
   <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
-  <div class="abar back"><button class="ib" onclick="go('tables')"><i class="ti ti-arrow-left"></i></button><div class="abar-group"><div class="abar-title">Menu</div><div class="abar-sub">Table 1 &bull; Indoor</div></div><button class="ib" onclick="go('search')"><i class="ti ti-search"></i></button></div>
+  <div class="abar back"><button class="ib" onclick="go('empty-cart')"><i class="ti ti-arrow-left"></i></button><div class="abar-group"><div class="abar-title">Menu</div><div class="abar-sub">Table 1 &bull; Indoor</div></div><button class="ib" onclick="go('search')"><i class="ti ti-search"></i></button></div>
   <div class="chips-wrap" id="mChips">
     <div class="chips-row" id="chipsContainer">
       <div class="chip chip-all on" onclick="fChip(this,'all')">All</div>
-      <div class="chip" data-chip-color onclick="fChip(this,'b')" style="--chip-color:#970000">&#127828;  Burgers</div>
-      <div class="chip" data-chip-color onclick="fChip(this,'s')" style="--chip-color:#213B96">&#127843;  Sushi</div>
-      <div class="chip" data-chip-color onclick="fChip(this,'a')" style="--chip-color:#006723">&#127866;  Beers</div>
-      <div class="chip" data-chip-color onclick="fChip(this,'h')" style="--chip-color:#334158">&#127789;  Hot Dogs</div>
-      <div class="chip" data-chip-color onclick="fChip(this,'w')" style="--chip-color:#990055">&#127863;  Wines</div>
-      <div class="chip" data-chip-color onclick="fChip(this,'z')" style="--chip-color:#4D2299">&#127829;  Pizzas</div>
-      <div class="chip chip-extra" data-chip-color onclick="fChip(this,'c')" style="--chip-color:#944900;display:none">&#127864;  Cocktails</div>
-      <div class="chip chip-extra" data-chip-color onclick="fChip(this,'l')" style="--chip-color:#2E7D32;display:none">&#129367;  Salads</div>
-      <div class="chip chip-extra" data-chip-color onclick="fChip(this,'d')" style="--chip-color:#0277BD;display:none">&#129380;  Soft Drinks</div>
+      <div class="chip" data-chip-color onclick="fChip(this,'burger')" style="--chip-color:#970000">&#127828;  Burgers</div>
+      <div class="chip" data-chip-color onclick="fChip(this,'sushi')" style="--chip-color:#213B96">&#127843;  Sushi</div>
+      <div class="chip" data-chip-color onclick="fChip(this,'beer')" style="--chip-color:#006723">&#127866;  Beers</div>
+      <div class="chip" data-chip-color onclick="fChip(this,'hotdog')" style="--chip-color:#334158">&#127789;  Hot Dogs</div>
+      <div class="chip" data-chip-color onclick="fChip(this,'wine')" style="--chip-color:#990055">&#127863;  Wines</div>
+      <div class="chip" data-chip-color onclick="fChip(this,'pizza')" style="--chip-color:#4D2299">&#127829;  Pizzas</div>
+      <div class="chip chip-extra" data-chip-color onclick="fChip(this,'cocktail')" style="--chip-color:#944900;display:none">&#127864;  Cocktails</div>
     </div>
   </div>
-  <div style="padding:8px 16px;flex-shrink:0"><a class="sub-link" id="chipToggle" onclick="toggleChips()" style="cursor:pointer">Show more (3)</a></div>
-  <div class="sub" style="padding:8px 16px"><span>16 items</span><span class="sub-sort"><i class="ti ti-arrows-sort" style="font-size:14px"></i> Popular</span></div>
+  <div style="padding:8px 16px;flex-shrink:0"><a class="sub-link" id="chipToggle" onclick="toggleChips()" style="cursor:pointer">Show more (1)</a></div>
+  <div class="sub" style="padding:8px 16px"><span id="itemCount">48 items</span><span class="sub-sort"><i class="ti ti-arrows-sort" style="font-size:14px"></i> Popular</span></div>
   <div class="scroll">
-    <div class="product-grid">
-      <div class="pc" onclick="openBSSimple('Pretzel with Butter','10,00 &euro;')"><div class="pn">Pretzel with Butter</div><div class="pb"><span class="pp">10,00 &euro;</span></div></div>
-      <div class="pc" onclick="openBSVariant('J&auml;gerschnitzel','25,00 &euro;')"><div class="pn">J&auml;gerschnitzel</div><div class="pb"><span class="pp">25,00 &euro;</span><i class="ti ti-list p-var"></i></div></div>
-      <div class="pc" onclick="openBSVariant('Wiener schnitzel','20,00 &euro;')"><div class="pn">Wiener schnitzel</div><div class="pb"><span class="pp">20,00 &euro;</span><i class="ti ti-list p-var"></i></div></div>
-      <div class="pc" onclick="addC(this)"><div class="pn">French Fries</div><div class="pb"><span class="pp">5,00 &euro;</span></div></div>
-      <div class="pc" data-c="v" onclick="addC(this)"><div class="pn">Sp&auml;tzle</div><div class="pb"><span class="pp">14,00 &euro;</span></div></div>
-      <div class="pc" data-c="v" onclick="addC(this)"><div class="pn">Bratwurst Bites</div><div class="pb"><span class="pp">10.00 &euro;</span></div></div>
-      <div class="pc" data-c="t" onclick="openBSVariant('Goulash Soup','23,00 &euro;')"><div class="pn">Goulash Soup</div><div class="pb"><span class="pp">23,00 &euro;</span><i class="ti ti-list p-var"></i></div></div>
-      <div class="pc" data-c="t" onclick="addC(this)"><div class="pn">Black Forest Cake</div><div class="pb"><span class="pp">8,00 &euro;</span></div></div>
-      <div class="pc" onclick="openBSVariant('Roast Chicken','20,00 &euro;')"><div class="pn">Roast Chicken</div><div class="pb"><span class="pp">20,00 &euro;</span><i class="ti ti-list p-var"></i></div></div>
-      <div class="pc" data-c="t" onclick="addC(this)"><div class="pn">Currywurst</div><div class="pb"><span class="pp">12,00 &euro;</span></div></div>
-      <div class="pc" onclick="addC(this)"><div class="pn">Weissbier</div><div class="pb"><span class="pp">5,50 &euro;</span></div></div>
-      <div class="pc" onclick="addC(this)"><div class="pn">Pilsner</div><div class="pb"><span class="pp">4,50 &euro;</span></div></div>
-      <div class="pc" onclick="addC(this)"><div class="pn">Obatzda</div><div class="pb"><span class="pp">9,00 &euro;</span></div></div>
-      <div class="pc" onclick="openBSVariant('Schweinebraten','18,00 &euro;')"><div class="pn">Schweinebraten</div><div class="pb"><span class="pp">18,00 &euro;</span><i class="ti ti-list p-var"></i></div></div>
-      <div class="pc" onclick="addC(this)"><div class="pn">Apple Strudel</div><div class="pb"><span class="pp">7,50 &euro;</span></div></div>
-      <div class="pc" onclick="addC(this)"><div class="pn">Radler</div><div class="pb"><span class="pp">4,00 &euro;</span></div></div>
+    <div class="product-grid" id="menuGrid">
+      <!-- Burgers -->
+      <div class="pc" data-cat="burger" data-name="Classic Smash Burger" onclick="addItem(this,'Classic Smash Burger',12)"><div class="pc-counter"></div><div class="pn">Classic Smash Burger</div><div class="pb"><span class="pp">12,00 &euro;</span></div></div>
+      <div class="pc" data-cat="burger" data-name="BBQ Bacon Burger" onclick="openBSVariant('BBQ Bacon Burger','15,00 &euro;')"><div class="pc-counter"></div><div class="pn">BBQ Bacon Burger</div><div class="pb"><span class="pp">15,00 &euro;</span><i class="ti ti-list p-var"></i></div></div>
+      <div class="pc" data-cat="burger" data-name="Truffle Mushroom Burger" onclick="openBSVariant('Truffle Mushroom Burger','16,00 &euro;')"><div class="pc-counter"></div><div class="pn">Truffle Mushroom Burger</div><div class="pb"><span class="pp">16,00 &euro;</span><i class="ti ti-list p-var"></i></div></div>
+      <div class="pc" data-cat="burger" data-name="Wagyu Cheese Burger" onclick="addItem(this,'Wagyu Cheese Burger',22)"><div class="pc-counter"></div><div class="pn">Wagyu Cheese Burger</div><div class="pb"><span class="pp">22,00 &euro;</span></div></div>
+      <div class="pc" data-cat="burger" data-name="Crispy Chicken Burger" onclick="addItem(this,'Crispy Chicken Burger',13)"><div class="pc-counter"></div><div class="pn">Crispy Chicken Burger</div><div class="pb"><span class="pp">13,00 &euro;</span></div></div>
+      <div class="pc" data-cat="burger" data-name="Veggie Bean Burger" onclick="addItem(this,'Veggie Bean Burger',11)"><div class="pc-counter"></div><div class="pn">Veggie Bean Burger</div><div class="pb"><span class="pp">11,00 &euro;</span></div></div>
+      <!-- Sushi -->
+      <div class="pc" data-cat="sushi" data-c="v" data-name="Salmon Nigiri (2pc)" onclick="addItem(this,'Salmon Nigiri (2pc)',8)"><div class="pc-counter"></div><div class="pn">Salmon Nigiri (2pc)</div><div class="pb"><span class="pp">8,00 &euro;</span></div></div>
+      <div class="pc" data-cat="sushi" data-c="v" data-name="Tuna Sashimi (5pc)" onclick="addItem(this,'Tuna Sashimi (5pc)',14)"><div class="pc-counter"></div><div class="pn">Tuna Sashimi (5pc)</div><div class="pb"><span class="pp">14,00 &euro;</span></div></div>
+      <div class="pc" data-cat="sushi" data-c="v" data-name="Dragon Roll (8pc)" onclick="openBSVariant('Dragon Roll (8pc)','16,00 &euro;')"><div class="pc-counter"></div><div class="pn">Dragon Roll (8pc)</div><div class="pb"><span class="pp">16,00 &euro;</span><i class="ti ti-list p-var"></i></div></div>
+      <div class="pc" data-cat="sushi" data-c="v" data-name="Spicy Tuna Roll" onclick="openBSSimple('Spicy Tuna Roll','12,00 &euro;')"><div class="pc-counter"></div><div class="pn">Spicy Tuna Roll</div><div class="pb"><span class="pp">12,00 &euro;</span></div></div>
+      <div class="pc" data-cat="sushi" data-c="v" data-name="California Roll (8pc)" onclick="addItem(this,'California Roll (8pc)',10)"><div class="pc-counter"></div><div class="pn">California Roll (8pc)</div><div class="pb"><span class="pp">10,00 &euro;</span></div></div>
+      <div class="pc" data-cat="sushi" data-c="v" data-name="Edamame" onclick="addItem(this,'Edamame',6)"><div class="pc-counter"></div><div class="pn">Edamame</div><div class="pb"><span class="pp">6,00 &euro;</span></div></div>
+      <!-- Beers -->
+      <div class="pc" data-cat="beer" data-name="Weissbier 0.5L" onclick="addItem(this,'Weissbier 0.5L',5.5)"><div class="pc-counter"></div><div class="pn">Weissbier 0.5L</div><div class="pb"><span class="pp">5,50 &euro;</span></div></div>
+      <div class="pc" data-cat="beer" data-name="Pilsner 0.5L" onclick="addItem(this,'Pilsner 0.5L',4.5)"><div class="pc-counter"></div><div class="pn">Pilsner 0.5L</div><div class="pb"><span class="pp">4,50 &euro;</span></div></div>
+      <div class="pc" data-cat="beer" data-name="Radler 0.5L" onclick="addItem(this,'Radler 0.5L',4)"><div class="pc-counter"></div><div class="pn">Radler 0.5L</div><div class="pb"><span class="pp">4,00 &euro;</span></div></div>
+      <div class="pc" data-cat="beer" data-name="Dunkel 0.5L" onclick="addItem(this,'Dunkel 0.5L',5)"><div class="pc-counter"></div><div class="pn">Dunkel 0.5L</div><div class="pb"><span class="pp">5,00 &euro;</span></div></div>
+      <div class="pc" data-cat="beer" data-name="IPA Craft 0.33L" onclick="addItem(this,'IPA Craft 0.33L',6)"><div class="pc-counter"></div><div class="pn">IPA Craft 0.33L</div><div class="pb"><span class="pp">6,00 &euro;</span></div></div>
+      <div class="pc" data-cat="beer" data-name="Alcohol-Free Lager" onclick="addItem(this,'Alcohol-Free Lager',4)"><div class="pc-counter"></div><div class="pn">Alcohol-Free Lager</div><div class="pb"><span class="pp">4,00 &euro;</span></div></div>
+      <!-- Hot Dogs -->
+      <div class="pc" data-cat="hotdog" data-c="t" data-name="Classic Frankfurt" onclick="addItem(this,'Classic Frankfurt',8)"><div class="pc-counter"></div><div class="pn">Classic Frankfurt</div><div class="pb"><span class="pp">8,00 &euro;</span></div></div>
+      <div class="pc" data-cat="hotdog" data-c="t" data-name="Chili Cheese Dog" onclick="openBSSimple('Chili Cheese Dog','10,00 &euro;')"><div class="pc-counter"></div><div class="pn">Chili Cheese Dog</div><div class="pb"><span class="pp">10,00 &euro;</span><i class="ti ti-list p-var"></i></div></div>
+      <div class="pc" data-cat="hotdog" data-c="t" data-name="Currywurst" onclick="openBSVariant('Currywurst','9,00 &euro;')"><div class="pc-counter"></div><div class="pn">Currywurst</div><div class="pb"><span class="pp">9,00 &euro;</span><i class="ti ti-list p-var"></i></div></div>
+      <div class="pc" data-cat="hotdog" data-c="t" data-name="Bratwurst Classic" onclick="addItem(this,'Bratwurst Classic',8.5)"><div class="pc-counter"></div><div class="pn">Bratwurst Classic</div><div class="pb"><span class="pp">8,50 &euro;</span></div></div>
+      <div class="pc" data-cat="hotdog" data-c="t" data-name="Jalapeño Dog" onclick="addItem(this,'Jalape\u00f1o Dog',11)"><div class="pc-counter"></div><div class="pn">Jalape&ntilde;o Dog</div><div class="pb"><span class="pp">11,00 &euro;</span></div></div>
+      <div class="pc" data-cat="hotdog" data-c="t" data-name="Veggie Dog" onclick="addItem(this,'Veggie Dog',7.5)"><div class="pc-counter"></div><div class="pn">Veggie Dog</div><div class="pb"><span class="pp">7,50 &euro;</span></div></div>
+      <!-- Wines -->
+      <div class="pc" data-cat="wine" data-c="p" data-name="Riesling (glass)" onclick="addItem(this,'Riesling (glass)',8)"><div class="pc-counter"></div><div class="pn">Riesling (glass)</div><div class="pb"><span class="pp">8,00 &euro;</span></div></div>
+      <div class="pc" data-cat="wine" data-c="p" data-name="Pinot Noir (glass)" onclick="addItem(this,'Pinot Noir (glass)',9)"><div class="pc-counter"></div><div class="pn">Pinot Noir (glass)</div><div class="pb"><span class="pp">9,00 &euro;</span></div></div>
+      <div class="pc" data-cat="wine" data-c="p" data-name="Chardonnay (glass)" onclick="addItem(this,'Chardonnay (glass)',8.5)"><div class="pc-counter"></div><div class="pn">Chardonnay (glass)</div><div class="pb"><span class="pp">8,50 &euro;</span></div></div>
+      <div class="pc" data-cat="wine" data-c="p" data-name="Prosecco (glass)" onclick="addItem(this,'Prosecco (glass)',7)"><div class="pc-counter"></div><div class="pn">Prosecco (glass)</div><div class="pb"><span class="pp">7,00 &euro;</span></div></div>
+      <div class="pc" data-cat="wine" data-c="p" data-name="Rosé (glass)" onclick="addItem(this,'Ros\u00e9 (glass)',7.5)"><div class="pc-counter"></div><div class="pn">Ros&eacute; (glass)</div><div class="pb"><span class="pp">7,50 &euro;</span></div></div>
+      <div class="pc" data-cat="wine" data-c="p" data-name="Merlot (glass)" onclick="addItem(this,'Merlot (glass)',9)"><div class="pc-counter"></div><div class="pn">Merlot (glass)</div><div class="pb"><span class="pp">9,00 &euro;</span></div></div>
+      <!-- Pizzas -->
+      <div class="pc" data-cat="pizza" data-c="a" data-name="Margherita" onclick="addItem(this,'Margherita',10)"><div class="pc-counter"></div><div class="pn">Margherita</div><div class="pb"><span class="pp">10,00 &euro;</span></div></div>
+      <div class="pc" data-cat="pizza" data-c="a" data-name="Diavola" onclick="openBSVariant('Diavola','13,00 &euro;')"><div class="pc-counter"></div><div class="pn">Diavola</div><div class="pb"><span class="pp">13,00 &euro;</span><i class="ti ti-list p-var"></i></div></div>
+      <div class="pc" data-cat="pizza" data-c="a" data-name="Quattro Formaggi" onclick="addItem(this,'Quattro Formaggi',14)"><div class="pc-counter"></div><div class="pn">Quattro Formaggi</div><div class="pb"><span class="pp">14,00 &euro;</span></div></div>
+      <div class="pc" data-cat="pizza" data-c="a" data-name="Prosciutto e Rucola" onclick="openBSSimple('Prosciutto e Rucola','15,00 &euro;')"><div class="pc-counter"></div><div class="pn">Prosciutto e Rucola</div><div class="pb"><span class="pp">15,00 &euro;</span><i class="ti ti-list p-var"></i></div></div>
+      <div class="pc" data-cat="pizza" data-c="a" data-name="Tonno e Cipolla" onclick="addItem(this,'Tonno e Cipolla',12)"><div class="pc-counter"></div><div class="pn">Tonno e Cipolla</div><div class="pb"><span class="pp">12,00 &euro;</span></div></div>
+      <div class="pc" data-cat="pizza" data-c="a" data-name="Calzone" onclick="addItem(this,'Calzone',13)"><div class="pc-counter"></div><div class="pn">Calzone</div><div class="pb"><span class="pp">13,00 &euro;</span></div></div>
+      <!-- Cocktails -->
+      <div class="pc" data-cat="cocktail" data-name="Aperol Spritz" onclick="addItem(this,'Aperol Spritz',10)"><div class="pc-counter"></div><div class="pn">Aperol Spritz</div><div class="pb"><span class="pp">10,00 &euro;</span></div></div>
+      <div class="pc" data-cat="cocktail" data-name="Mojito" onclick="addItem(this,'Mojito',11)"><div class="pc-counter"></div><div class="pn">Mojito</div><div class="pb"><span class="pp">11,00 &euro;</span></div></div>
+      <div class="pc" data-cat="cocktail" data-name="Espresso Martini" onclick="addItem(this,'Espresso Martini',12)"><div class="pc-counter"></div><div class="pn">Espresso Martini</div><div class="pb"><span class="pp">12,00 &euro;</span></div></div>
+      <div class="pc" data-cat="cocktail" data-name="Negroni" onclick="addItem(this,'Negroni',11)"><div class="pc-counter"></div><div class="pn">Negroni</div><div class="pb"><span class="pp">11,00 &euro;</span></div></div>
+      <div class="pc" data-cat="cocktail" data-name="Margarita" onclick="addItem(this,'Margarita',10.5)"><div class="pc-counter"></div><div class="pn">Margarita</div><div class="pb"><span class="pp">10,50 &euro;</span></div></div>
+      <div class="pc" data-cat="cocktail" data-name="Virgin Colada" onclick="addItem(this,'Virgin Colada',8)"><div class="pc-counter"></div><div class="pn">Virgin Colada</div><div class="pb"><span class="pp">8,00 &euro;</span></div></div>
     </div>
   </div>
   <div class="bbar"><div class="brow">
-    <div class="edit-fab" onclick="go('cart')"><i class="ti ti-pencil"></i><div class="badge" style="top:-6px;right:-6px;background:var(--error)" id="cBdg">5</div></div>
-    <button class="btn btn-p" onclick="go('cart')" id="pBtn">Place order (5)</button>
+    <div class="edit-fab" onclick="openEditOrder()"><i class="ti ti-pencil"></i><div class="badge" style="top:-6px;right:-6px;background:var(--error);display:none" id="cBdg">0</div></div>
+    <button class="btn btn-p" onclick="placeOrder()" id="pBtn" style="display:none">Place order (0)</button>
   </div></div>
+</div>
+
+<div class="snack" id="menuSnack" style="bottom:90px"><i class="ti ti-circle-check" style="font-size:20px;color:var(--primary)"></i> Order placed successfully</div>
+
+<!-- ===== EDIT ORDER BOTTOM SHEET ===== -->
+<div class="bs-bg" id="eoBg" onclick="closeEditOrder()"></div>
+<div class="bs" id="eoSheet" style="max-height:70%">
+  <div class="bs-h">
+    <div class="bs-t">Edit order</div>
+    <button class="ib" style="font-size:20px;width:48px;height:48px" onclick="closeEditOrder()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="bs-s" id="eoList" style="padding:16px">
+    <div style="text-align:center;padding:40px 0;color:var(--on-surface-variant);font-size:14px;letter-spacing:0.25px;line-height:20px">No items added yet</div>
+  </div>
+  <div style="padding:16px;border-top:1px solid var(--outline-variant)">
+    <button class="btn btn-p" onclick="placeOrder()" id="eoPlaceBtn" style="display:none">Place order (0)</button>
+  </div>
 </div>
 
 <!-- ===== S: MENU BAR ===== -->
@@ -751,21 +806,15 @@ body { background: #111; display: flex; justify-content: center; align-items: ce
 <!-- ===== S: CART ===== -->
 <div class="scr" id="s-cart">
   <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
-  <div class="abar back"><button class="ib" onclick="go('menu')"><i class="ti ti-arrow-left"></i></button><div class="abar-group"><div class="abar-title">Table 1</div><div class="abar-sub">Indoor</div></div><button class="ib" onclick="go('customers')"><i class="ti ti-user-plus"></i></button><button class="ib"><i class="ti ti-trash"></i></button></div>
+  <div class="abar back"><button class="ib" onclick="go('tables')"><i class="ti ti-arrow-left"></i></button><div class="abar-group"><div class="abar-title">Table 1</div><div class="abar-sub">Indoor</div></div><button class="ib" onclick="go('customers')"><i class="ti ti-user-plus"></i></button><button class="ib"><i class="ti ti-trash"></i></button></div>
   <div class="scroll">
-    <div class="fl">
-      <div class="fi" onclick="openBS()"><div class="li-body"><div class="li-t">Pretzel with Butter</div><div class="li-s">10,00 &euro; per item</div><div class="li-s12" style="margin-top:8px">Pommes (8,00 &euro;)</div><div class="li-s12" style="margin-top:4px">Ketcheup (8,00 &euro;)</div></div><div class="qty-c">1</div></div>
-      <div class="fi" onclick="openBS()"><div class="li-body"><div class="li-t">Pretzel with Butter</div><div class="li-s">10,00 &euro; per item</div></div><div class="qty-c">1</div></div>
-      <div class="fi" onclick="openBS()"><div class="li-body"><div class="li-t">Wiener schnitzel</div><div class="li-s">25,00 &euro; per item</div><div class="v-chip">Chicken</div></div><div class="qty-c">2</div></div>
-      <div class="fi" onclick="openBS()"><div class="li-body"><div class="li-t">Wiener schnitzel</div><div class="li-s">25,00 &euro; per item</div><div class="v-chip">Pork</div></div><div class="qty-c">1</div></div>
-      <div class="fi"><div class="li-body"><div class="li-t">Bratwurst Bites <i class="ti ti-note" style="font-size:14px;color:var(--on-surface-variant)"></i></div><div class="li-s">10,00 &euro; per item</div></div><div class="qty-c">1</div></div>
-    </div>
+    <div class="fl" id="cartList"></div>
   </div>
   <div class="snack" id="oSnk"><i class="ti ti-circle-check" style="font-size:20px;color:var(--primary)"></i> Order placed successfully <span class="snack-a">Undo</span></div>
   <div class="bbar">
     <button class="btn btn-o" onclick="go('menu')"><i class="ti ti-circle-plus"></i> Add items</button>
     <div class="brow">
-      <button class="btn btn-p" onclick="go('payment')"><i class="ti ti-receipt"></i> Checkout - 98,00 &euro;</button>
+      <button class="btn btn-p" onclick="go('payment')" id="cartCheckoutBtn"><i class="ti ti-receipt"></i> Checkout - 0,00 &euro;</button>
       <button class="edit-fab" onclick="go('split')"><i class="ti ti-share"></i></button>
     </div>
   </div>
@@ -1027,7 +1076,7 @@ body { background: #111; display: flex; justify-content: center; align-items: ce
 
 <script>
 const stk=[];
-function go(id){const c=document.querySelector('.scr.active');if(c){stk.push(c.id.replace('s-',''));c.classList.remove('active');}const n=document.getElementById('s-'+id);if(n)n.classList.add('active');closeBS();hideMenu();location.hash=id;if(id==='syncing')setTimeout(()=>go('staff-login'),2000);}
+function go(id){const c=document.querySelector('.scr.active');if(c){stk.push(c.id.replace('s-',''));c.classList.remove('active');}const n=document.getElementById('s-'+id);if(n)n.classList.add('active');closeBS();hideMenu();location.hash=id;if(id==='syncing')setTimeout(()=>go('staff-login'),2000);if(id==='cart')renderCart();}
 window.addEventListener('hashchange',function(){const h=location.hash.replace('#','');if(h){const c=document.querySelector('.scr.active');if(c)c.classList.remove('active');const n=document.getElementById('s-'+h);if(n)n.classList.add('active');}});
 window.addEventListener('DOMContentLoaded',function(){const h=location.hash.replace('#','');if(h){const c=document.querySelector('.scr.active');if(c)c.classList.remove('active');const n=document.getElementById('s-'+h);if(n)n.classList.add('active');}
   if(h==='syncing')setTimeout(()=>go('staff-login'),2000);
@@ -1098,9 +1147,18 @@ function openBSVariant(name,price){
 }
 
 function addToOrder(){
-  cc+=sv;
-  document.getElementById('cBdg').textContent=cc;
-  document.getElementById('pBtn').textContent='Place order ('+cc+')';
+  var name=document.getElementById('bsTitle').textContent;
+  var price=bsBasePrice;
+  /* Calculate addon total */
+  var addons=0;
+  var container=bsMode==='variant'?document.getElementById('bsAddonsVariant'):document.getElementById('bsAddonsSimple');
+  container.querySelectorAll('.oi.sel').forEach(function(el){addons+=parseFloat(el.dataset.addon||0);});
+  var unitPrice=price+addons;
+  /* Add qty items */
+  var found=null;
+  for(var i=0;i<order.length;i++){if(order[i].name===name&&order[i].price===unitPrice){found=order[i];break;}}
+  if(found){found.qty+=sv;}else{order.push({name:name,price:unitPrice,qty:sv});}
+  updateUI();
   closeBS();
 }
 function sDlg(id){document.getElementById(id).classList.add('show');}
@@ -1120,19 +1178,181 @@ function schk(el){el.classList.toggle('sel');const c=el.querySelector('.oc');if(
 function tChk(el){const c=el.querySelector('.oc');if(c){c.classList.toggle('on');el.classList.toggle('sel');}const pn=el.closest('.tab-pane');if(pn){const any=pn.querySelectorAll('.oc.on').length>0;const b=pn.querySelector('.btn-p');if(b)b.disabled=!any;}}
 
 let my=false;function tglMy(){my=!my;document.getElementById('tAll').style.display=my?'none':'';document.getElementById('tMy').style.display=my?'':'none';document.getElementById('myTgl').textContent=my?'Show all tables':'Show my tables only';}
-let chipsExpanded=false;function toggleChips(){chipsExpanded=!chipsExpanded;document.querySelectorAll('.chip-extra').forEach(c=>c.style.display=chipsExpanded?'':'none');document.getElementById('chipToggle').textContent=chipsExpanded?'Show less':'Show more (3)';}
+let chipsExpanded=false;
+function toggleChips(){
+  chipsExpanded=!chipsExpanded;
+  document.querySelectorAll('.chip-extra').forEach(c=>c.style.display=chipsExpanded?'':'none');
+  document.getElementById('chipToggle').textContent=chipsExpanded?'Show less':'Show more (1)';
+}
+
+let activeFilter='all';
 function fChip(el,cat){
   const chips=el.closest('.chips-row')||el.closest('.chips');
   if(!chips)return;
-  chips.querySelectorAll('.chip').forEach(c=>{c.classList.remove('on');});
+  chips.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
   el.classList.add('on');
+  activeFilter=cat;
+  filterMenu();
+}
+function filterMenu(){
+  var grid=document.getElementById('menuGrid');
+  if(!grid)return;
+  var cards=grid.querySelectorAll('.pc');
+  var count=0;
+  cards.forEach(function(c){
+    if(activeFilter==='all'||c.dataset.cat===activeFilter){c.style.display='';count++;}
+    else{c.style.display='none';}
+  });
+  var el=document.getElementById('itemCount');
+  if(el)el.textContent=count+' items';
 }
 
-let cc=5;
+/* ===== ORDER STATE ===== */
+var order=[];
+function getOrderTotal(){var t=0;order.forEach(function(o){t+=o.qty;});return t;}
+function fmtPrice(n){return n.toFixed(2).replace('.',',')+' \u20AC';}
+function parsePrice(s){return parseFloat(s.replace(/[^\d,\.]/g,'').replace(',','.'));}
+
+function syncCardBadges(){
+  var grid=document.getElementById('menuGrid');
+  if(!grid)return;
+  grid.querySelectorAll('.pc').forEach(function(card){
+    var name=card.dataset.name;
+    if(!name)return;
+    /* Sum qty across all order entries that start with this item name */
+    var totalQty=0;
+    order.forEach(function(o){if(o.name===name||o.name.indexOf(name)===0)totalQty+=o.qty;});
+    var counter=card.querySelector('.pc-counter');
+    if(totalQty>0){
+      card.classList.add('inc');
+      if(counter){counter.textContent=totalQty;counter.style.display='block';}
+    } else {
+      card.classList.remove('inc');
+      if(counter){counter.style.display='none';}
+    }
+  });
+}
+
+function updateUI(){
+  var total=getOrderTotal();
+  var bdg=document.getElementById('cBdg');
+  var btn=document.getElementById('pBtn');
+  var eoBtn=document.getElementById('eoPlaceBtn');
+  if(total>0){
+    bdg.style.display='flex';bdg.textContent=total;
+    btn.style.display='';btn.textContent='Place order ('+total+')';
+    eoBtn.style.display='';eoBtn.textContent='Place order ('+total+')';
+  } else {
+    bdg.style.display='none';
+    btn.style.display='none';
+    eoBtn.style.display='none';
+  }
+  syncCardBadges();
+}
+
+function addItem(card,name,price){
+  var found=null;
+  for(var i=0;i<order.length;i++){if(order[i].name===name){found=order[i];break;}}
+  if(found){found.qty++;}else{order.push({name:name,price:price,qty:1});}
+  updateUI();
+}
+
+function changeQty(name,delta){
+  for(var i=0;i<order.length;i++){
+    if(order[i].name===name){
+      order[i].qty+=delta;
+      if(order[i].qty<=0){order.splice(i,1);}
+      break;
+    }
+  }
+  updateUI();
+  renderEditOrder();
+}
+
+function renderEditOrder(){
+  var list=document.getElementById('eoList');
+  if(order.length===0){
+    list.innerHTML='<div style="text-align:center;padding:40px 0;color:var(--on-surface-variant);font-size:14px;letter-spacing:0.25px;line-height:20px">No items added yet</div>';
+    return;
+  }
+  var html='<div style="display:flex;flex-direction:column;gap:2px">';
+  order.forEach(function(item,idx){
+    var first=idx===0;var last=idx===order.length-1;var only=order.length===1;
+    var rad=only?'8px':first?'8px 8px 2px 2px':last?'2px 2px 8px 8px':'2px';
+    html+='<div style="display:flex;align-items:center;padding:12px 8px 12px 16px;background:var(--surface);border-radius:'+rad+';min-height:56px;box-sizing:border-box">';
+    html+='<div style="flex:1;min-width:0">';
+    html+='<div style="font-size:14px;font-weight:500;color:var(--on-surface);letter-spacing:0.1px;line-height:20px">'+item.name+'</div>';
+    html+='<div style="font-size:12px;font-weight:400;color:var(--on-surface-variant);letter-spacing:0.4px;line-height:16px;margin-top:4px">'+fmtPrice(item.price)+'</div>';
+    html+='</div>';
+    html+='<div style="display:flex;align-items:center;gap:0">';
+    if(item.qty===1){
+      html+='<button class="ib" style="width:48px;height:48px;font-size:20px;color:var(--on-surface-variant)" onclick="changeQty(\''+item.name.replace(/'/g,"\\'")+'\',-1)"><i class="ti ti-trash"></i></button>';
+    } else {
+      html+='<button class="ib" style="width:48px;height:48px" onclick="changeQty(\''+item.name.replace(/'/g,"\\'")+'\',-1)"><div style="width:32px;height:32px;border-radius:100px;border:1px solid var(--outline-variant);display:flex;align-items:center;justify-content:center;background:var(--surface-lowest)"><i class="ti ti-minus" style="font-size:20px;color:var(--on-surface)"></i></div></button>';
+    }
+    html+='<div style="width:20px;text-align:center;font-size:14px;font-weight:600;color:#000;letter-spacing:0.1px;line-height:20px">'+item.qty+'</div>';
+    html+='<button class="ib" style="width:48px;height:48px" onclick="changeQty(\''+item.name.replace(/'/g,"\\'")+'\'  ,1)"><div style="width:32px;height:32px;border-radius:100px;border:1px solid var(--outline-variant);display:flex;align-items:center;justify-content:center;background:var(--surface-lowest)"><i class="ti ti-plus" style="font-size:20px;color:var(--on-surface)"></i></div></button>';
+    html+='</div></div>';
+  });
+  html+='</div>';
+  list.innerHTML=html;
+}
+
+function openEditOrder(){
+  renderEditOrder();
+  document.getElementById('eoBg').classList.add('show');
+  document.getElementById('eoSheet').classList.add('show');
+}
+function closeEditOrder(){
+  document.getElementById('eoBg').classList.remove('show');
+  document.getElementById('eoSheet').classList.remove('show');
+}
+
+var placedOrders=[];
+function placeOrder(){
+  closeEditOrder();closeBS();
+  /* Move current order items into placed orders */
+  order.forEach(function(item){
+    var found=null;
+    for(var i=0;i<placedOrders.length;i++){if(placedOrders[i].name===item.name){found=placedOrders[i];break;}}
+    if(found){found.qty+=item.qty;}else{placedOrders.push({name:item.name,price:item.price,qty:item.qty});}
+  });
+  order=[];
+  updateUI();
+  renderEditOrder();
+  renderCart();
+  go('cart');
+  /* Show snackbar briefly on the cart screen */
+  var s=document.getElementById('oSnk');
+  if(s){s.classList.add('show');setTimeout(function(){s.classList.remove('show');},2500);}
+}
+
+function renderCart(){
+  var list=document.getElementById('cartList');
+  if(!list)return;
+  if(placedOrders.length===0){
+    list.innerHTML='<div style="text-align:center;padding:40px 0;color:var(--on-surface-variant);font-size:14px;letter-spacing:0.25px;line-height:20px">No orders yet</div>';
+    var cb=document.getElementById('cartCheckoutBtn');
+    if(cb)cb.style.display='none';
+    return;
+  }
+  var total=0;
+  var html='';
+  placedOrders.forEach(function(item){
+    total+=item.price*item.qty;
+    html+='<div class="fi"><div class="li-body"><div class="li-t">'+item.name+'</div><div class="li-s">'+fmtPrice(item.price)+' per item</div></div><div class="qty-c">'+item.qty+'</div></div>';
+  });
+  list.innerHTML=html;
+  var cb=document.getElementById('cartCheckoutBtn');
+  if(cb){cb.style.display='';cb.innerHTML='<i class="ti ti-receipt"></i> Checkout - '+fmtPrice(total);}
+}
+
+/* Legacy addC for other screens */
+let cc=0;
 function addC(card){
   cc++;
-  document.getElementById('cBdg').textContent=cc;
-  document.getElementById('pBtn').textContent='Place order ('+cc+')';
+  var bdg=document.getElementById('cBdg');if(bdg)bdg.textContent=cc;
+  var btn=document.getElementById('pBtn');if(btn)btn.textContent='Place order ('+cc+')';
   if(card){card.classList.add('inc');setTimeout(function(){card.classList.remove('inc');},400);}
 }
 </script>
