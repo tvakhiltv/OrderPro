@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>OrderPro Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+/* ======== DESIGN TOKENS (exact from Figma) ======== */
+:root {
+  --primary: #279FF6;
+  --on-primary: #FFF;
+  --primary-container: #CFE5FF;
+  --on-primary-container: #134A74;
+  --error: #FF3B30;
+  --on-error: #FFF;
+  --error-container: #FFDAD5;
+  --surface: #F8F8F8;
+  --on-surface: #171C1E;
+  --on-surface-variant: #5D6476;
+  --surface-lowest: #FFFFFF;
+  --surface-container: #E9EFF1;
+  --surface-container-low: #EFF4F7;
+  --outline: #72787E;
+  --outline-variant: #E9EAEB;
+  --occupied: #134A74;
+  --occupied-info: #C2C7CE;
+  --inverse-surface: #2C3133;
+  --inverse-on-surface: #ECF1F4;
+  --success: #34C759;
+  --logo-dark: #232E3D;
+  --muted: #6C757D;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-family: 'Inter', sans-serif; font-size: 16px; -webkit-font-smoothing: antialiased; }
+body { background: #111; display: flex; justify-content: center; align-items: center; min-height: 100dvh; padding: 16px; }
+
+/* ======== DEVICE ======== */
+.device {
+  width: 412px; height: 892px; background: var(--surface);
+  border-radius: 28px; overflow: hidden; position: relative;
+  display: flex; flex-direction: column;
+  box-shadow: 0 0 0 2px #333, 0 12px 48px rgba(0,0,0,.6);
+}
+@media (min-width:768px) {
+  .device { max-width: 768px; }
+}
+@media (min-width:1100px) {
+  .device { max-width: 1024px; }
+}
+
+/* ======== STATUS BAR (Roboto 13px Medium, h=24) ======== */
+.sbar {
+  height: 24px; padding: 0 16px; display: flex; justify-content: space-between; align-items: center;
+  font-family: 'Roboto', sans-serif; font-size: 13px; font-weight: 500; color: var(--on-surface);
+  flex-shrink: 0; letter-spacing: 0.13px;
+}
+.sbar-r { display: flex; gap: 0; align-items: center; }
+.sbar-r i { font-size: 17px; }
+
+/* ======== APP BAR (h=64, total top=88) ======== */
+.abar {
+  height: 64px; padding: 8px 8px 8px 16px; display: flex; align-items: center; gap: 0; flex-shrink: 0;
+}
+.abar.back { padding-left: 4px; }
+.abar-group { flex: 1; padding-left: 8px; }
+.abar-title { font-size: 16px; font-weight: 600; color: var(--on-surface); line-height: 24px; letter-spacing: 0.15px; }
+.abar-sub { font-size: 12px; font-weight: 500; color: var(--on-surface-variant); line-height: 16px; letter-spacing: 0.5px; }
+.abar .spacer { flex: 1; }
+/* Icon button: 48x48 touch, 40x40 visible, circle */
+.ib {
+  width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
+  background: none; border: none; border-radius: 50%; cursor: pointer; flex-shrink: 0;
+  font-size: 24px; color: var(--on-surface-variant);
+}
+.ib:active { background: rgba(0,0,0,.06); }
+
+/* ======== TILLHUB LOGO (geometric mark + text) ======== */
+.logo { display: flex; align-items: center; flex: 1; height: 48px; }
+.logo svg { height: 16px; width: auto; }
+
+/* ======== TABS (Inter Medium 14px, h=48) ======== */
+.tabs { display: flex; padding: 0; border-bottom: 1px solid var(--outline-variant); flex-shrink: 0; }
+.tab {
+  padding: 14px 16px 12px; font-family: 'Inter',sans-serif; font-size: 14px; font-weight: 500;
+  color: var(--on-surface-variant); letter-spacing: 0.1px; line-height: 20px;
+  cursor: pointer; border: none; border-bottom: 2px solid transparent; background: none; white-space: nowrap;
+}
+.tab.on { color: var(--on-surface); border-bottom-color: var(--primary); }
+
+/* ======== SUBHEADER (Inter 12px, h=40) ======== */
+.sub {
+  padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
+  font-size: 12px; font-weight: 400; color: var(--on-surface-variant); letter-spacing: 0.4px; line-height: 16px; flex-shrink: 0;
+}
+.sub-link { color: var(--primary); font-size: 12px; font-weight: 500; letter-spacing: 0.4px; line-height: 16px; cursor: pointer; }
+.sub-sort { color: var(--primary); font-weight: 500; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+
+/* ======== CHIPS (Inter Medium 12px) ======== */
+.chips {
+  display: flex; gap: 4px; padding: 8px 16px; overflow-x: auto; flex-shrink: 0;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.chips::-webkit-scrollbar { display: none; }
+.chips-wrap { flex-shrink: 0; background: var(--surface); padding: 8px 16px 4px 16px; }
+.chips-row { display: flex; gap: 4px; flex-wrap: wrap; padding: 0; }
+.chip {
+  padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500;
+  white-space: nowrap; cursor: pointer; border: 1.5px solid transparent;
+  color: #fff; display: flex; align-items: center; gap: 4px; font-family: 'Inter',sans-serif;
+  letter-spacing: 0.5px; line-height: 16px; height: 36px; box-sizing: border-box;
+}
+.chip:active { opacity: .85; }
+/* Default (unselected) = filled with category color */
+.chip[data-chip-color] { background: var(--chip-color); }
+/* "All" chip unselected = inverse-surface */
+.chip.chip-all { background: var(--inverse-surface); color: #F8F8F8; }
+/* Selected state: white bg + tinted overlay + category-color border, dark text */
+.chip.on { background: #fff; border-color: var(--chip-color); color: var(--on-surface); }
+.chip.on[data-chip-color] { background: color-mix(in srgb, var(--chip-color) 8%, #fff); }
+/* "All" selected = white bg + primary border */
+.chip.chip-all.on { background: var(--surface-lowest); border-color: var(--primary); color: var(--on-surface); }
+.chip-dd { border-radius: 8px; padding: 6px 8px 6px 12px; display: flex; align-items: center; gap: 4px; }
+
+/* ======== LIST GROUP (grouped card radius pattern) ======== */
+.lg { padding: 0 16px; display: flex; flex-direction: column; gap: 2px; }
+.li {
+  background: var(--surface-lowest); padding: 16px; display: flex; align-items: center;
+  gap: 12px; cursor: pointer; min-height: 56px;
+}
+.li:first-child { border-radius: 8px 8px 2px 2px; }
+.li:last-child { border-radius: 2px 2px 8px 8px; }
+.li:only-child { border-radius: 8px; }
+.li:not(:first-child):not(:last-child) { border-radius: 2px; }
+.li:active { background: var(--surface-container-low); }
+.li-body { flex: 1; min-width: 0; }
+.li-t { font-size: 16px; font-weight: 500; color: var(--on-surface); letter-spacing: 0.15px; line-height: 24px; }
+.li-s { font-size: 14px; font-weight: 400; color: var(--on-surface-variant); letter-spacing: 0.25px; line-height: 20px; margin-top: 2px; }
+.li-s12 { font-size: 12px; font-weight: 400; color: var(--on-surface-variant); letter-spacing: 0.4px; line-height: 16px; margin-top: 2px; }
+.li-r { font-size: 16px; font-weight: 500; color: var(--on-surface); display: flex; align-items: center; gap: 8px; white-space: nowrap; letter-spacing: 0.15px; line-height: 24px; }
+.li-chev { color: var(--on-surface-variant); font-size: 24px; }
+.li.sel { outline: 2px solid var(--primary); border-radius: 8px!important; background: #F7F9FF; }
+.li.sp-chk { min-height: 48px; }
+.li.sp-chk.sel { outline: none; border: 2px solid var(--primary); border-radius: 8px!important; background: #F7F9FF; padding: 2px 14px 2px 0; }
+
+/* ======== FLAT LIST (cart) ======== */
+.fl { display: flex; flex-direction: column; gap: 2px; margin: 0 16px; padding: 0 0 16px; }
+.fi { padding: 12px; display: flex; align-items: flex-start; gap: 8px; background: var(--surface-lowest); cursor: pointer; min-height: 56px; box-sizing: border-box; }
+.fl .fi:first-child { border-radius: 8px 8px 2px 2px; }
+.fl .fi:last-child { border-radius: 2px 2px 8px 8px; }
+.fl .fi:only-child { border-radius: 8px; }
+.fl .fi:not(:first-child):not(:last-child) { border-radius: 2px; }
+.fi .li-t { font-size: 14px; font-weight: 500; letter-spacing: 0.1px; line-height: 20px; }
+.fi .li-s { font-size: 12px; letter-spacing: 0.4px; line-height: 16px; margin-top: 2px; }
+.qty-c { width: 24px; height: 24px; border-radius: 8px; background: var(--surface-container); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 500; color: var(--on-surface); flex-shrink: 0; }
+.v-chip { display: inline-block; padding: 3px 8px; background: var(--surface-container); border-radius: 4px; font-size: 11px; font-weight: 500; color: var(--on-surface-variant); margin-top: 8px; letter-spacing: 0.5px; line-height: 16px; }
+
+/* ======== TABLE GRID (gap=8, cards=88h, radius=8) ======== */
+.table-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; padding: 0 16px; }
+.tc {
+  background: var(--surface-lowest); border-radius: 8px; height: 88px;
+  text-align: center; cursor: pointer; border: 1px solid var(--outline-variant);
+  display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px;
+  padding: 12px; min-width: 158px;
+}
+.tc:active { opacity: .85; }
+.tc.occ { background: var(--occupied); border-color: var(--occupied); }
+.tc .tn { font-size: 16px; font-weight: 500; color: #000; letter-spacing: 0.15px; line-height: 24px; }
+.tc.occ .tn { color: #fff; }
+.tc .ti2 { font-size: 12px; font-weight: 400; color: var(--occupied-info); letter-spacing: 0.4px; line-height: 16px; }
+
+/* ======== PRODUCT GRID (gap=8, cards=88h) ======== */
+.product-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; padding: 0 16px; }
+.pc {
+  background: var(--surface-lowest); border-radius: 8px; padding: 8px 8px 8px 12px;
+  cursor: pointer; border: 1px solid var(--outline-variant); position: relative;
+  display: flex; flex-direction: column; justify-content: space-between; height: 88px;
+  overflow: hidden;
+}
+.pc:active { background: var(--surface-container-low); }
+.pc.inc { border: 2px solid var(--primary); }
+.pc[data-c]::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+.pc[data-c="v"]::before { background: #B86DFA; }
+.pc[data-c="t"]::before { background: #03B5B8; }
+.pc[data-c="p"]::before { background: #E77482; }
+.pc[data-c="a"]::before { background: #78350F; }
+.pc.inc[data-c]::before { display: none; }
+.pn { font-size: 16px; font-weight: 500; color: #000; letter-spacing: 0.15px; line-height: 24px; }
+.pb { display: flex; justify-content: space-between; align-items: center; }
+.pp { font-size: 12px; font-weight: 400; color: var(--on-surface-variant); letter-spacing: 0.4px; line-height: 16px; }
+.p-var { color: var(--on-surface-variant); font-size: 16px; }
+.badge {
+  position: absolute; top: -6px; right: -6px;
+  background: var(--primary); color: #fff; min-width: 20px; height: 20px; border-radius: 10px;
+  font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; padding: 0 4px;
+  letter-spacing: 0.5px;
+}
+
+/* ======== BUTTONS ======== */
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 0 16px; height: 56px; border-radius: 8px; font-size: 16px; font-weight: 600;
+  cursor: pointer; border: none; width: 100%; font-family: 'Inter',sans-serif;
+  letter-spacing: 0.15px; line-height: 24px;
+}
+.btn:active { opacity: .85; }
+.btn-p { background: var(--primary); color: var(--on-primary); }
+.btn-p:disabled { opacity: .35; cursor: default; }
+.btn-o { background: var(--surface-lowest); border: 1px solid var(--outline-variant); color: var(--on-surface-variant); }
+.btn-e { background: var(--error); color: var(--on-error); }
+.btn i { font-size: 24px; }
+
+/* ======== BOTTOM BAR ======== */
+.bbar { padding: 16px; display: flex; flex-direction: column; gap: 12px; flex-shrink: 0; margin-top: auto; border-top: 1px solid var(--outline-variant); background: var(--surface-lowest); }
+.brow { display: flex; gap: 8px; align-items: stretch; }
+.brow .btn { flex: 1; }
+.edit-fab {
+  width: 56px; height: 56px; border-radius: 8px; border: 1px solid var(--outline-variant);
+  background: var(--surface-lowest); display: flex; align-items: center; justify-content: center;
+  font-size: 24px; color: var(--on-surface-variant); cursor: pointer; position: relative; flex-shrink: 0;
+}
+
+/* ======== AVATAR ======== */
+.av { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; color: #fff; flex-shrink: 0; letter-spacing: 0.1px; }
+.av-lg { width: 56px; height: 56px; font-size: 18px; }
+.av-teal { background: #0D9488; }
+.av-rose { background: #BE185D; }
+.av-blue { background: var(--primary); }
+.av-warm { background: #D97706; }
+
+/* ======== NUMPAD ======== */
+.numpad { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; padding: 0 16px; width: 100%; }
+.nk {
+  background: #ECF1F4; border: none; border-radius: 16px;
+  height: 60px; font-size: 20px; font-weight: 600; color: #001D34;
+  cursor: pointer; font-family: 'Inter',sans-serif;
+  display: flex; align-items: center; justify-content: center; letter-spacing: 0;
+}
+.nk:active { background: var(--outline-variant); }
+.pin-dots { display: flex; gap: 8px; justify-content: center; padding: 16px 0; }
+.dot { font-size: 40px; font-weight: 700; color: #232E3D; line-height: 40px; opacity: 0; transition: opacity .15s; }
+.dot::after { content: '•'; }
+.dot.on { opacity: 1; }
+
+/* ======== AMOUNT ======== */
+.amt { text-align: center; padding: 8px 16px 16px; }
+.amt-l { font-size: 14px; font-weight: 400; color: var(--on-surface-variant); letter-spacing: 0.25px; line-height: 20px; }
+.amt-v { font-size: 36px; font-weight: 700; color: #232E3D; line-height: 48px; }
+
+/* ======== PAYMENT / HISTORY ICON ======== */
+.pay-ic { width: 40px; height: 40px; border-radius: 8px; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--on-surface-variant); flex-shrink: 0; }
+.h-ic { width: 36px; height: 36px; border-radius: 8px; background: var(--surface-container); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--on-surface-variant); flex-shrink: 0; }
+
+/* ======== SUCCESS ======== */
+.suc-ic { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 48px; color: #00AB99; margin: 0 auto 8px; }
+
+/* ======== TIP CARD ======== */
+.tip-card { background: var(--surface-lowest); border: 1px solid var(--outline-variant); border-radius: 8px; height: 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; width: 100%; }
+.tip-card:active { background: var(--surface-container-low); }
+.tip-card .tc-title { font-size: 16px; font-weight: 600; color: var(--on-surface); letter-spacing: 0.15px; line-height: 24px; }
+.tip-card .tc-sub { font-size: 12px; font-weight: 400; color: var(--on-surface-variant); letter-spacing: 0.4px; line-height: 16px; }
+
+/* ======== SUGGESTION GRID ======== */
+.sug-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 6px; width: 100%; }
+.sug-card { background: var(--surface-lowest); border: 1px solid var(--outline-variant); border-radius: 8px; height: 72px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; font-weight: 600; color: var(--on-surface); letter-spacing: 0.15px; line-height: 24px; }
+.sug-card:active { background: var(--surface-container-low); }
+
+/* ======== EMPTY STATE ======== */
+.empty { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 32px; text-align: center; gap: 12px; }
+.empty-ic { width: 56px; height: 56px; border-radius: 12px; background: var(--surface-container); display: flex; align-items: center; justify-content: center; font-size: 28px; color: var(--on-surface-variant); }
+
+/* ======== SCROLL ======== */
+.scroll { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+
+/* ======== SCREENS ======== */
+.scr { display: none; flex-direction: column; height: 100%; position: absolute; inset: 0; background: var(--surface); }
+.scr.active { display: flex; z-index: 1; }
+
+/* ======== OVERLAY ======== */
+.ov { position: absolute; inset: 0; background: var(--surface-lowest); z-index: 50; display: none; flex-direction: column; }
+.ov.show { display: flex; }
+
+/* ======== BOTTOM SHEET ======== */
+.bs-bg { position: absolute; inset: 0; background: rgba(0,0,0,.4); z-index: 40; display: none; }
+.bs-bg.show { display: block; }
+.bs { position: absolute; bottom: 0; left: 0; right: 0; background: var(--surface-lowest); border-radius: 12px 12px 0 0; z-index: 41; max-height: 88%; display: none; flex-direction: column; }
+.bs.show { display: flex; }
+.bs-h { display: flex; justify-content: space-between; align-items: center; padding: 8px 8px 8px 16px; border-bottom: 1px solid var(--outline-variant); }
+.bs-t { font-size: 16px; font-weight: 600; color: var(--on-surface); letter-spacing: 0.15px; line-height: 24px; }
+.bs-p { font-size: 12px; font-weight: 500; color: var(--on-surface-variant); letter-spacing: 0.5px; line-height: 16px; }
+.bs-s { overflow-y: auto; padding: 0 16px 8px; flex: 1; }
+
+/* ======== DIALOG ======== */
+.dlg-bg { position: absolute; inset: 0; background: rgba(0,0,0,.4); z-index: 60; display: none; align-items: flex-end; }
+.dlg-bg.show { display: flex; }
+.dlg { background: var(--surface-lowest); border-radius: 16px 16px 0 0; width: 100%; padding: 24px 16px; max-height: 80%; overflow-y: auto; }
+.dlg-t { font-size: 18px; font-weight: 600; color: var(--on-surface); display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+
+/* ======== SNACKBAR ======== */
+.snack {
+  position: absolute; bottom: 170px; left: 16px; right: 16px;
+  background: var(--inverse-surface); color: var(--inverse-on-surface);
+  padding: 14px 16px; border-radius: 8px; display: none; align-items: center; gap: 12px;
+  z-index: 35; font-size: 14px; font-weight: 500;
+}
+.snack.show { display: flex; }
+.snack-a { color: var(--primary); font-weight: 600; margin-left: auto; cursor: pointer; }
+
+/* ======== QTY CONTROL ======== */
+.qc { display: flex; gap: 16px; }
+.qb { flex: 1; height: 56px; border-radius: 8px; background: var(--surface-lowest); border: 1px solid #E0E2E3; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--on-surface); font-family: 'Inter',sans-serif; }
+.qv { flex: 1; height: 56px; text-align: center; font-size: 22px; font-weight: 500; display: flex; align-items: center; justify-content: center; border: 1px solid #E0E2E3; border-radius: 8px; background: var(--surface-lowest); }
+
+/* ======== OPTIONS ======== */
+.og { font-size: 14px; font-weight: 600; color: var(--on-surface); margin: 16px 0 8px; letter-spacing: 0.1px; line-height: 20px; }
+.oi { display: flex; align-items: center; gap: 12px; padding: 8px 16px 8px 12px; background: var(--surface); margin-bottom: 2px; cursor: pointer; min-height: 56px; box-sizing: border-box; }
+.oi:first-of-type { border-radius: 8px 8px 2px 2px; }
+.oi:not(:first-of-type):not(:last-of-type) { border-radius: 4px; }
+.oi:last-of-type { border-radius: 4px 4px 8px 8px; margin-bottom: 0; }
+.oi.sel { background: #F7F9FF; outline: 2px solid var(--primary); border-radius: 8px!important; z-index: 1; position: relative; }
+.or { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--on-surface-variant); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.or.on { border-color: var(--primary); }
+.or.on::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); }
+.oc { width: 18px; height: 18px; border-radius: 4px; border: 2px solid var(--on-surface-variant); flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.oc.on { background: var(--primary); border-color: var(--primary); }
+.oc.on::after { content: '\2713'; color: #fff; font-size: 12px; font-weight: 700; }
+.oi-l { flex: 1; font-size: 14px; font-weight: 500; color: var(--on-surface); letter-spacing: 0.25px; line-height: 20px; }
+.oi-p { font-size: 14px; font-weight: 400; color: var(--on-surface-variant); letter-spacing: 0.25px; line-height: 20px; }
+.req-badge { background: var(--surface-container); padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; color: var(--on-surface); letter-spacing: 0.5px; line-height: 16px; }
+
+/* ======== MENU OVERLAY ======== */
+.mp { display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--surface-lowest); border-radius: 8px; margin: 0 16px 16px; min-height: 56px; box-sizing: border-box; }
+.mp-n { font-size: 16px; font-weight: 600; color: var(--on-surface); }
+.mp-id { font-size: 12px; color: var(--on-surface-variant); letter-spacing: 0.4px; }
+.mp-off { color: var(--primary); font-size: 14px; font-weight: 500; margin-left: auto; cursor: pointer; }
+.mi { display: flex; align-items: center; gap: 16px; padding: 16px; cursor: pointer; min-height: 56px; box-sizing: border-box; }
+.mi i { font-size: 22px; color: var(--on-surface-variant); }
+.mi span { flex: 1; font-size: 16px; color: var(--on-surface); font-weight: 400; letter-spacing: 0.15px; }
+
+/* ======== TEXT FIELD ======== */
+.tf { border: 1.5px solid var(--outline-variant); border-radius: 8px; padding: 14px 16px; font-size: 16px; font-family: 'Inter',sans-serif; color: var(--on-surface); background: var(--surface-lowest); width: 100%; outline: none; letter-spacing: 0.15px; }
+.tf:focus { border-color: var(--primary); }
+.tf-l { font-size: 12px; color: var(--primary); margin-bottom: 4px; letter-spacing: 0.4px; }
+.tf-g { margin-bottom: 12px; }
+
+/* ======== LOADING ======== */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { width: 48px; height: 48px; border: 4px solid var(--surface-container); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+
+/* ======== SECTION HEAD ======== */
+.sh { padding: 16px 16px 8px; font-size: 14px; font-weight: 600; letter-spacing: 0.1px; line-height: 20px; color: var(--on-surface); }
+.sh.blue { color: var(--primary); }
+
+/* ======== PAID ======== */
+.paid { display: flex; align-items: center; gap: 4px; color: #00AB99; font-size: 14px; font-weight: 600; padding: 8px 16px; }
+.paid i { font-size: 20px; }
+</style>
+</head>
+<body>
+<div class="device" id="app">
+
+<!-- ===== TILLHUB LOGO SVG (used inline) ===== -->
+<svg id="tillhubLogo" style="display:none">
+  <symbol id="thlogo" viewBox="0 0 76 16">
+    <rect x="0" y="0" width="7" height="16" rx="0" fill="#232E3D"/>
+    <rect x="8.8" y="0" width="7" height="7" rx="0" fill="#232E3D"/>
+    <rect x="8.8" y="8.9" width="7" height="7.1" rx="0" fill="#232E3D"/>
+    <text x="21" y="13.5" font-family="Inter,sans-serif" font-weight="700" font-size="14.5" fill="#232E3D" letter-spacing="0.3">tillhub</text>
+  </symbol>
+</svg>
+
+<!-- ===== MENU OVERLAY ===== -->
+<div class="ov" id="menuOv">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="abar"><div class="abar-title" style="flex:1">Menu</div><button class="ib" onclick="hideMenu()"><i class="ti ti-x"></i></button></div>
+  <div class="scroll">
+    <div class="mp">
+      <div class="av av-lg av-teal">JD</div>
+      <div><div class="mp-n">John Doe</div><div class="mp-id">CR0951</div></div>
+      <span class="mp-off" onclick="hideMenu();go('staff-login')">Sign off</span>
+    </div>
+    <div class="lg">
+      <div class="mi" onclick="hideMenu();go('history')"><i class="ti ti-history"></i><span>History</span><i class="ti ti-chevron-right li-chev"></i></div>
+      <div class="mi"><i class="ti ti-layout-grid"></i><span>Configure sell-screen</span><i class="ti ti-chevron-right li-chev"></i></div>
+      <div class="mi"><i class="ti ti-settings"></i><span>Settings</span><i class="ti ti-chevron-right li-chev"></i></div>
+    </div>
+  </div>
+  <div style="text-align:center;color:var(--on-surface-variant);font-size:13px;padding:16px;margin-top:auto;letter-spacing:0.4px">Ver. 1.0</div>
+</div>
+
+<!-- ===== BOTTOM SHEET ===== -->
+<div class="bs-bg" id="bsBg" onclick="closeBS()"></div>
+<div class="bs" id="bsProduct">
+  <div class="bs-h">
+    <div><div class="bs-t" id="bsTitle">Wiener schnitzel</div><div class="bs-p" id="bsPrice">20,00 &euro;</div></div>
+    <div style="display:flex;gap:0"><button class="ib" style="font-size:20px;width:48px;height:48px"><i class="ti ti-info-circle"></i></button><button class="ib" style="font-size:20px;width:48px;height:48px" onclick="closeBS()"><i class="ti ti-x"></i></button></div>
+  </div>
+  <div class="bs-s">
+    <div class="og">Quantity</div>
+    <div class="qc" style="margin-bottom:16px"><button class="qb" onclick="sqty(-1)">&minus;</button><div class="qv" id="sqv">1</div><button class="qb" onclick="sqty(1)">+</button></div>
+    <div id="bsMeatSection">
+      <div class="og" style="display:flex;justify-content:space-between;align-items:center">Meat options<span class="req-badge">Required</span></div>
+      <div class="oi sel" onclick="srad(this)"><div class="or on"></div><span class="oi-l">Chicken</span></div>
+      <div class="oi" onclick="srad(this)"><div class="or"></div><span class="oi-l">Pork</span></div>
+      <div class="oi" onclick="srad(this)"><div class="or"></div><span class="oi-l">Beef</span></div>
+    </div>
+    <div class="og">Add-ons</div>
+    <div id="bsAddonsVariant">
+      <div class="oi sel" data-addon="8" onclick="schk(this)"><div class="oc on"></div><span class="oi-l">Pommes</span><span class="oi-p">+8,00 &euro;</span></div>
+      <div class="oi" data-addon="4" onclick="schk(this)"><div class="oc"></div><span class="oi-l">Garlic bread</span><span class="oi-p">+4,00 &euro;</span></div>
+      <div class="oi" data-addon="4" onclick="schk(this)"><div class="oc"></div><span class="oi-l">Side dipping sauce</span><span class="oi-p">+4,00 &euro;</span></div>
+    </div>
+    <div id="bsAddonsSimple" style="display:none">
+      <div class="oi sel" data-addon="8" onclick="schk(this)"><div class="oc on"></div><span class="oi-l">Butter</span><span class="oi-p">+8,00 &euro;</span></div>
+    </div>
+  </div>
+  <div style="padding:16px;display:flex;flex-direction:column;gap:16px;border-top:1px solid var(--outline-variant)">
+    <div style="display:flex;gap:12px">
+      <button class="btn btn-o" style="flex:1;padding:10px 16px;font-size:14px;font-weight:500;height:40px;justify-content:center;gap:8px;letter-spacing:0.1px;line-height:20px"><i class="ti ti-trash" style="font-size:20px"></i> Remove item</button>
+      <button class="btn btn-o" style="flex:1;padding:10px 16px;font-size:14px;font-weight:500;height:40px;justify-content:center;gap:8px;letter-spacing:0.1px;line-height:20px"><i class="ti ti-discount-2" style="font-size:20px"></i> Add discount</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="flex:1;display:flex;flex-direction:column;gap:4px"><div id="bsTotal" style="font-size:16px;font-weight:600;color:var(--on-surface);letter-spacing:0.15px;line-height:24px">28,00 &euro;</div><div style="font-size:11px;font-weight:500;color:var(--on-surface-variant);letter-spacing:0.5px;line-height:16px">Total price</div></div>
+      <button class="btn btn-p" style="flex:1" onclick="addToOrder()">Add to order</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DIALOGS ===== -->
+<div class="dlg-bg" id="dlg-refund" onclick="hDlg('dlg-refund')"><div class="dlg" onclick="event.stopPropagation()">
+  <div class="dlg-t">Refund sale? <button class="ib" style="width:32px;height:32px;font-size:20px" onclick="hDlg('dlg-refund')"><i class="ti ti-x"></i></button></div>
+  <div class="lg" style="padding:0;margin-bottom:12px">
+    <div class="oi" onclick="srad(this)"><div class="or"></div><div class="li-body"><div class="li-t">Other</div><div class="li-s12">Other reasons</div></div></div>
+    <div class="oi sel" onclick="srad(this)"><div class="or on"></div><div class="li-body"><div class="li-t">Spoiled Goods</div><div class="li-s12">Goods are spoiled.</div></div></div>
+    <div class="oi" onclick="srad(this)"><div class="or"></div><div class="li-body"><div class="li-t">Damaged Goods</div><div class="li-s12">Goods are damaged.</div></div></div>
+    <div class="oi" onclick="srad(this)"><div class="or"></div><div class="li-body"><div class="li-t">Exchange</div><div class="li-s12">Goods exchanged for other goods.</div></div></div>
+    <div class="oi" onclick="srad(this)"><div class="or"></div><div class="li-body"><div class="li-t">Returned Goods</div><div class="li-s12">Goods were returned by the customer.</div></div></div>
+  </div>
+  <input class="tf" placeholder="Add a note (optional)" style="margin-bottom:16px">
+  <div class="brow"><button class="btn btn-o" onclick="hDlg('dlg-refund')">Cancel</button><button class="btn btn-e">Refund</button></div>
+</div></div>
+
+<div class="dlg-bg" id="dlg-cancel" onclick="hDlg('dlg-cancel')"><div class="dlg" onclick="event.stopPropagation()">
+  <div class="dlg-t">Cancel sale? <button class="ib" style="width:32px;height:32px;font-size:20px" onclick="hDlg('dlg-cancel')"><i class="ti ti-x"></i></button></div>
+  <p style="font-size:16px;color:var(--on-surface);margin-bottom:16px;letter-spacing:0.15px;line-height:24px">Are you sure you want to cancel and return all payments?</p>
+  <div class="lg" style="padding:0;margin-bottom:12px"><div class="li" style="cursor:default;flex-direction:column;align-items:flex-start;gap:4px"><span style="font-size:12px;color:var(--on-surface-variant);letter-spacing:0.4px">Total amount</span><span style="font-size:20px;font-weight:600">50,00 &euro;</span></div></div>
+  <input class="tf" placeholder="Add a note (optional)" style="margin-bottom:16px">
+  <div class="brow"><button class="btn btn-o" onclick="hDlg('dlg-cancel')">Back</button><button class="btn btn-e">Confirm</button></div>
+</div></div>
+
+<div class="dlg-bg" id="dlg-offline"><div class="dlg" onclick="event.stopPropagation()">
+  <div class="dlg-t"><span style="display:flex;align-items:center;gap:8px"><i class="ti ti-alert-circle" style="color:var(--error);font-size:22px"></i> You're offline</span><button class="ib" style="width:32px;height:32px;font-size:20px" onclick="hDlg('dlg-offline')"><i class="ti ti-x"></i></button></div>
+  <p style="font-size:16px;color:var(--on-surface);line-height:24px;margin-bottom:8px;letter-spacing:0.15px">Order couldn't be placed because there's no internet connection.</p>
+  <p style="font-size:16px;color:var(--on-surface);line-height:24px;margin-bottom:20px;letter-spacing:0.15px">Your order will place automatically once you're back online.</p>
+  <button class="btn btn-o" onclick="hDlg('dlg-offline')">Close</button>
+</div></div>
+
+<!-- ===== S: CONNECT ===== -->
+<div class="scr" id="s-connect">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="scroll" style="display:flex;flex-direction:column;align-items:center;padding:0 16px;text-align:center;justify-content:space-between;height:100%">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:40px">
+      <h1 style="font-size:24px;font-weight:500;color:var(--on-surface);margin-bottom:16px;line-height:32px">Connect to Tillhub</h1>
+      <p style="font-size:14px;color:var(--on-surface-variant);line-height:20px;margin-bottom:32px;letter-spacing:0.25px;max-width:296px">Please scan the QR code shown on your Tillhub POS(iPad) settingsr to connect.</p>
+      <!-- Illustration: Restaurant staff with POS -->
+      <svg width="280" height="163" viewBox="0 0 280 163" fill="none" style="margin-bottom:16px">
+        <!-- Table surface -->
+        <ellipse cx="168" cy="148" rx="72" ry="8" fill="#D4E8F7" stroke="#5B8DB5" stroke-width="1.2"/>
+        <!-- Glass on table -->
+        <rect x="158" y="128" width="10" height="18" rx="2" fill="none" stroke="#8EAFC4" stroke-width="1"/>
+        <rect x="160" y="140" width="6" height="4" rx="1" fill="#D4E8F7"/>
+        <!-- Center waiter (apron) -->
+        <circle cx="152" cy="52" r="14" fill="none" stroke="#3D5A6E" stroke-width="1.4"/>
+        <path d="M142 52c0-2 2-6 5-8" stroke="#3D5A6E" stroke-width="1" fill="none"/>
+        <circle cx="148" cy="50" r="1.2" fill="#3D5A6E"/>
+        <circle cx="156" cy="50" r="1.2" fill="#3D5A6E"/>
+        <path d="M149 55c1.5 1.2 4.5 1.2 6 0" stroke="#3D5A6E" stroke-width="1" fill="none" stroke-linecap="round"/>
+        <!-- Hair -->
+        <path d="M138 48c0-12 12-20 22-16 4 2 6 6 6 12" stroke="#3D5A6E" stroke-width="1.4" fill="none"/>
+        <!-- Body with apron -->
+        <path d="M140 66v50c0 2 1 3 3 3h18c2 0 3-1 3-3V66" stroke="#3D5A6E" stroke-width="1.2" fill="none"/>
+        <rect x="141" y="72" width="22" height="38" rx="1" fill="#D4E8F7" stroke="#5B8DB5" stroke-width="0.8"/>
+        <!-- Apron strings -->
+        <path d="M141 72l-3-6M163 72l3-6" stroke="#5B8DB5" stroke-width="0.8"/>
+        <!-- Arms -->
+        <path d="M140 72l-8 16" stroke="#3D5A6E" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M164 72l12-4" stroke="#3D5A6E" stroke-width="1.2" stroke-linecap="round"/>
+        <!-- POS device in hand -->
+        <rect x="172" y="62" width="12" height="18" rx="2" fill="#F0F4F8" stroke="#3D5A6E" stroke-width="1"/>
+        <rect x="174" y="64" width="8" height="10" rx="1" fill="#D4E8F7"/>
+        <!-- Chef card (top-left) -->
+        <rect x="12" y="16" width="60" height="72" rx="6" fill="#F0F4F8" stroke="#BFCDD8" stroke-width="1"/>
+        <circle cx="42" cy="44" r="12" fill="none" stroke="#3D5A6E" stroke-width="1.2"/>
+        <circle cx="39" cy="42" r="1" fill="#3D5A6E"/>
+        <circle cx="45" cy="42" r="1" fill="#3D5A6E"/>
+        <path d="M40 47c1 1 3 1 4 0" stroke="#3D5A6E" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+        <!-- Chef hat -->
+        <path d="M30 34c0-8 10-14 18-10 4-6 14-4 14 4v4H32" stroke="#3D5A6E" stroke-width="1" fill="none"/>
+        <!-- Chef coat dots -->
+        <circle cx="40" cy="62" r="1.2" fill="#3D5A6E"/>
+        <circle cx="40" cy="67" r="1.2" fill="#3D5A6E"/>
+        <circle cx="44" cy="62" r="1.2" fill="#3D5A6E"/>
+        <circle cx="44" cy="67" r="1.2" fill="#3D5A6E"/>
+        <!-- Blue check badge (top-left card) -->
+        <circle cx="18" cy="22" r="10" fill="#279FF6"/>
+        <path d="M13 22l3 3 7-7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Waitress card (bottom-left) -->
+        <rect x="38" y="78" width="56" height="68" rx="6" fill="#F5EDE4" stroke="#BFCDD8" stroke-width="1"/>
+        <circle cx="66" cy="100" r="11" fill="none" stroke="#3D5A6E" stroke-width="1.2"/>
+        <circle cx="63" cy="98" r="1" fill="#3D5A6E"/>
+        <circle cx="69" cy="98" r="1" fill="#3D5A6E"/>
+        <path d="M64 103c1 1 3 1 4 0" stroke="#3D5A6E" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+        <!-- Bun hairstyle -->
+        <circle cx="66" cy="85" r="4" fill="none" stroke="#3D5A6E" stroke-width="1.2"/>
+        <path d="M56 96c2-8 8-12 16-10" stroke="#3D5A6E" stroke-width="1.2" fill="none"/>
+        <!-- Blue check badge (bottom card) -->
+        <circle cx="88" cy="82" r="10" fill="#279FF6"/>
+        <path d="M83 82l3 3 7-7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Customer (right, reading menu) -->
+        <circle cx="228" cy="68" r="13" fill="none" stroke="#3D5A6E" stroke-width="1.2"/>
+        <circle cx="225" cy="66" r="1" fill="#3D5A6E"/>
+        <circle cx="231" cy="66" r="1" fill="#3D5A6E"/>
+        <!-- Long hair -->
+        <path d="M215 62c0-10 10-16 18-12 4 2 6 6 6 14v20" stroke="#BFCDD8" stroke-width="2" fill="none"/>
+        <path d="M215 62v24" stroke="#BFCDD8" stroke-width="2" fill="none"/>
+        <!-- Customer body -->
+        <path d="M218 82v40c0 2 1 3 3 3h14c2 0 3-1 3-3V82" stroke="#3D5A6E" stroke-width="1.2" fill="none"/>
+        <!-- Menu in hand -->
+        <path d="M212 90l-6 24" stroke="#3D5A6E" stroke-width="1.2" stroke-linecap="round"/>
+        <rect x="198" y="110" width="14" height="20" rx="1" fill="none" stroke="#3D5A6E" stroke-width="1" transform="rotate(-10 205 120)"/>
+        <line x1="201" y1="116" x2="209" y2="114" stroke="#BFCDD8" stroke-width="0.6"/>
+        <line x1="202" y1="120" x2="210" y2="118" stroke="#BFCDD8" stroke-width="0.6"/>
+        <line x1="202" y1="124" x2="210" y2="122" stroke="#BFCDD8" stroke-width="0.6"/>
+        <!-- Dashed connecting lines -->
+        <path d="M72 40c20-16 50-20 78-4" stroke="#BFCDD8" stroke-width="1.2" stroke-dasharray="4 3" fill="none"/>
+        <path d="M180 56c16 2 32 8 44 14" stroke="#BFCDD8" stroke-width="1.2" stroke-dasharray="4 3" fill="none"/>
+        <path d="M94 100c14 6 32 12 46 14" stroke="#BFCDD8" stroke-width="1.2" stroke-dasharray="4 3" fill="none"/>
+        <!-- Arrow tips -->
+        <path d="M146 38l4-2-2 4" stroke="#BFCDD8" stroke-width="1" fill="none"/>
+        <path d="M222 72l2-3-4 0" stroke="#BFCDD8" stroke-width="1" fill="none"/>
+        <!-- Orange decorative dots -->
+        <circle cx="240" cy="32" r="3.5" fill="#F0903C"/>
+        <circle cx="248" cy="40" r="6" fill="#F0903C"/>
+        <circle cx="32" cy="132" r="2.5" fill="#F0903C"/>
+        <circle cx="24" cy="138" r="5" fill="#F0903C"/>
+        <!-- Small orange dot top -->
+        <circle cx="192" cy="20" r="2.5" fill="#F0903C" opacity="0.6"/>
+      </svg>
+    </div>
+    <div style="padding-bottom:16px;width:100%;max-width:328px">
+      <a style="color:var(--primary);font-size:14px;font-weight:500;cursor:pointer;letter-spacing:0.1px;line-height:20px;display:block;margin-bottom:20px">Where to find the QR code?</a>
+      <button class="btn btn-p" style="height:56px;font-size:16px;letter-spacing:0.15px;margin-bottom:12px;justify-content:center" onclick="go('syncing')"><i class="ti ti-qrcode"></i> Scan QR code</button>
+      <button class="btn btn-o" style="height:56px;font-size:16px;letter-spacing:0.15px;justify-content:center" onclick="go('manual-connect')">Enter code manually</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== S: MANUAL CONNECT ===== -->
+<div class="scr" id="s-manual-connect">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="abar back"><button class="ib" onclick="go('connect')"><i class="ti ti-arrow-left"></i></button><div class="abar-group"><div class="abar-title">Connect manually</div></div></div>
+  <div class="scroll" style="padding:8px 16px 16px">
+    <div class="tf-g"><div class="tf-l">IP address</div><input class="tf" value="127.0.0.1" style="border-color:var(--primary)"></div>
+    <div class="tf-g" style="position:relative"><input class="tf" placeholder="Access token" value="871dc871u289dh" style="padding-right:40px"><i class="ti ti-chevron-down" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:20px;color:var(--on-surface-variant);pointer-events:none"></i></div>
+    <div class="tf-g"><input class="tf" placeholder="Unique terminal serial number"></div>
+  </div>
+  <div class="bbar"><button class="btn btn-p" style="justify-content:center" onclick="go('syncing')">Connect now</button></div>
+</div>
+
+<!-- ===== S: SYNCING ===== -->
+<div class="scr" id="s-syncing">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="empty"><div class="spinner"></div><div style="font-size:20px;font-weight:600;color:var(--on-surface);margin-top:16px">Getting things ready</div><div style="font-size:16px;color:var(--on-surface-variant);letter-spacing:0.15px;line-height:24px">We're syncing your information.<br>This usually takes less than a minute.</div></div>
+</div>
+
+<!-- ===== S: STAFF LOGIN ===== -->
+<div class="scr" id="s-staff-login">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="abar"><div class="abar-title" style="flex:1">Staff login</div><button class="ib"><i class="ti ti-search"></i></button></div>
+  <div class="scroll">
+    <div class="lg">
+      <div class="li" onclick="go('pin')"><div class="av av-teal">JD</div><div class="li-body"><div class="li-t">John Doe</div></div></div>
+      <div class="li" onclick="go('pin')"><div class="av av-rose">EM</div><div class="li-body"><div class="li-t">Emma Meyer</div></div></div>
+      <div class="li" onclick="go('pin')"><div class="av av-blue">LM</div><div class="li-body"><div class="li-t">Lukas M&uuml;ller</div></div></div>
+      <div class="li" onclick="go('pin')"><div class="av av-warm">SS</div><div class="li-body"><div class="li-t">Sophia Schmidt</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== S: PIN ===== -->
+<div class="scr" id="s-pin" style="background:#fff">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="abar back"><button class="ib" onclick="go('staff-login')"><i class="ti ti-arrow-left"></i></button><div class="abar-group"><div class="abar-title">Enter pin</div></div></div>
+  <div class="pin-dots" id="pd"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot"></span></div>
+  <div style="flex:1;display:flex;align-items:center">
+    <div class="numpad">
+      <button class="nk" onclick="pk(1)">1</button><button class="nk" onclick="pk(2)">2</button><button class="nk" onclick="pk(3)">3</button>
+      <button class="nk" onclick="pk(4)">4</button><button class="nk" onclick="pk(5)">5</button><button class="nk" onclick="pk(6)">6</button>
+      <button class="nk" onclick="pk(7)">7</button><button class="nk" onclick="pk(8)">8</button><button class="nk" onclick="pk(9)">9</button>
+      <button class="nk" onclick="pc()">C</button><button class="nk" onclick="pk(0)">0</button><button class="nk" onclick="pb()"><i class="ti ti-backspace"></i></button>
+    </div>
+  </div>
+  <div class="bbar"><button class="btn btn-p" style="justify-content:center" onclick="go('tables')">Continue</button></div>
+</div>
+
+<!-- ===== S: TABLES ===== -->
+<div class="scr" id="s-tables">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="abar">
+    <div class="logo"><svg style="height:16px;width:76px"><use href="#thlogo"/></svg></div>
+    <button class="ib" onclick="showMenu()"><i class="ti ti-menu-2"></i></button>
+  </div>
+  <div class="tabs" id="tTabs">
+    <button class="tab on" onclick="st('tTabs','tP-in',this)">Indoor</button>
+    <button class="tab" onclick="st('tTabs','tP-gd',this)">Garden</button>
+    <button class="tab" onclick="st('tTabs','tP-br',this)">BAR</button>
+  </div>
+  <div class="tab-pane" id="tP-in" style="display:flex;flex-direction:column;flex:1">
+    <div class="sub"><span>7 tables</span><span class="sub-link" id="myTgl" onclick="tglMy()">Show my tables only</span></div>
+    <div class="scroll">
+      <div class="table-grid" id="tAll">
+        <div class="tc" onclick="go('empty-cart')"><div class="tn">Table 1</div></div>
+        <div class="tc occ" onclick="go('cart')"><div class="tn">Table 2</div><div class="ti2">3 orders</div></div>
+        <div class="tc" onclick="go('empty-cart')"><div class="tn">Table 3</div></div>
+        <div class="tc" onclick="go('empty-cart')"><div class="tn">Table 4</div></div>
+        <div class="tc occ" onclick="go('cart')"><div class="tn">Table 5</div><div class="ti2">15.00 &euro;</div></div>
+        <div class="tc" onclick="go('empty-cart')"><div class="tn">Table 6</div></div>
+        <div class="tc" onclick="go('empty-cart')"><div class="tn">Table 7</div></div>
+      </div>
+      <div class="table-grid" id="tMy" style="display:none">
+        <div class="tc occ" onclick="go('cart')"><div class="tn">Table 2</div><div class="ti2">3 orders</div></div>
+        <div class="tc occ" onclick="go('cart')"><div class="tn">Table 5</div><div class="ti2">15.00 &euro;</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="tab-pane" id="tP-gd" style="display:none;flex-direction:column;flex:1">
+    <div class="sub"><span>4 tables</span><span class="sub-link">Show my tables only</span></div>
+    <div class="scroll"><div class="table-grid">
+      <div class="tc" onclick="go('empty-cart')"><div class="tn">Table 1</div></div>
+      <div class="tc" onclick="go('empty-cart')"><div class="tn">Table 2</div></div>
+      <div class="tc occ" onclick="go('cart')"><div class="tn">Table 3</div><div class="ti2">2 orders</div></div>
+      <div class="tc" onclick="go('empty-cart')"><div class="tn">Table 4</div></div>
+    </div></div>
+  </div>
+  <div class="tab-pane" id="tP-br" style="display:none;flex-direction:column;flex:1">
+    <div class="sub"><span>4 orders</span></div>
+    <div class="scroll"><div class="lg">
+      <div class="li" onclick="go('cart')"><div class="li-body"><div class="li-t">Order 1</div><div class="li-s12">Anna</div></div><div class="li-r">15,00 &euro; <i class="ti ti-chevron-right li-chev"></i></div></div>
+      <div class="li" onclick="go('cart')"><div class="li-body"><div class="li-t">Order 2</div><div class="li-s12">Anna</div></div><div class="li-r">15,00 &euro; <i class="ti ti-chevron-right li-chev"></i></div></div>
+      <div class="li" onclick="go('cart')"><div class="li-body"><div class="li-t">Order 3</div><div class="li-s12">Bamby</div></div><div class="li-r">20,50 &euro; <i class="ti ti-chevron-right li-chev"></i></div></div>
+      <div class="li" onclick="go('cart')"><div class="li-body"><div class="li-t">Order 4</div><div class="li-s12">Bamby</div></div><div class="li-r">35,00 &euro; <i class="ti ti-chevron-right li-chev"></i></div></div>
+    </div></div>
+    <div class="bbar"><button class="btn btn-p" style="justify-content:center" onclick="go('menu-bar')"><i class="ti ti-plus"></i> Add new order</button></div>
+  </div>
+</div>
+
+<!-- ===== S: EMPTY CART ===== -->
+<div class="scr" id="s-empty-cart">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="abar back"><button class="ib" onclick="go('tables')"><i class="ti ti-arrow-left"></i></button><div class="abar-group"><div class="abar-title">Table 1</div><div class="abar-sub">Indoor</div></div><button class="ib"><i class="ti ti-user-plus"></i></button></div>
+  <div class="empty">
+    <div class="empty-ic"><i class="ti ti-glass-cocktail"></i></div>
+    <div style="font-size:16px;font-weight:500;color:var(--on-surface);letter-spacing:0.15px">Add items to continue</div>
+  </div>
+  <div class="bbar"><button class="btn btn-p" onclick="go('menu')" style="width:auto;align-self:center;padding:14px 32px"><i class="ti ti-circle-plus"></i> Add items</button></div>
+</div>
+
+<!-- ===== S: MENU ===== -->
+<div class="scr active" id="s-menu">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="abar back"><button class="ib" onclick="go('tables')"><i class="ti ti-arrow-left"></i></button><div class="abar-group"><div class="abar-title">Menu</div><div class="abar-sub">Table 1 &bull; Indoor</div></div><button class="ib" onclick="go('search')"><i class="ti ti-search"></i></button></div>
+  <div class="chips-wrap" id="mChips">
+    <div class="chips-row" id="chipsContainer">
+      <div class="chip chip-all on" onclick="fChip(this,'all')">All</div>
+      <div class="chip" data-chip-color onclick="fChip(this,'b')" style="--chip-color:#970000">&#127828;  Burgers</div>
+      <div class="chip" data-chip-color onclick="fChip(this,'s')" style="--chip-color:#213B96">&#127843;  Sushi</div>
+      <div class="chip" data-chip-color onclick="fChip(this,'a')" style="--chip-color:#006723">&#127866;  Beers</div>
+      <div class="chip" data-chip-color onclick="fChip(this,'h')" style="--chip-color:#334158">&#127789;  Hot Dogs</div>
+      <div class="chip" data-chip-color onclick="fChip(this,'w')" style="--chip-color:#990055">&#127863;  Wines</div>
+      <div class="chip" data-chip-color onclick="fChip(this,'z')" style="--chip-color:#4D2299">&#127829;  Pizzas</div>
+      <div class="chip chip-extra" data-chip-color onclick="fChip(this,'c')" style="--chip-color:#944900;display:none">&#127864;  Cocktails</div>
+      <div class="chip chip-extra" data-chip-color onclick="fChip(this,'l')" style="--chip-color:#2E7D32;display:none">&#129367;  Salads</div>
+      <div class="chip chip-extra" data-chip-color onclick="fChip(this,'d')" style="--chip-color:#0277BD;display:none">&#129380;  Soft Drinks</div>
+    </div>
+  </div>
+  <div style="padding:8px 16px;flex-shrink:0"><a class="sub-link" id="chipToggle" onclick="toggleChips()" style="cursor:pointer">Show more (3)</a></div>
+  <div class="sub" style="padding:8px 16px"><span>16 items</span><span class="sub-sort"><i class="ti ti-arrows-sort" style="font-size:14px"></i> Popular</span></div>
+  <div class="scroll">
+    <div class="product-grid">
+      <div class="pc" onclick="openBSSimple('Pretzel with Butter','10,00 &euro;')"><div class="pn">Pretzel with Butter</div><div class="pb"><span class="pp">10,00 &euro;</span></div></div>
+      <div class="pc" onclick="openBSVariant('J&auml;gerschnitzel','25,00 &euro;')"><div class="pn">J&auml;gerschnitzel</div><div class="pb"><span class="pp">25,00 &euro;</span><i class="ti ti-list p-var"></i></div></div>
+      <div class="pc" onclick="openBSVariant('Wiener schnitzel','20,00 &euro;')"><div class="pn">Wiener schnitzel</div><div class="pb"><span class="pp">20,00 &euro;</span><i class="ti ti-list p-var"></i></div></div>
+      <div class="pc" onclick="addC(this)"><div class="pn">French Fries</div><div class="pb"><span class="pp">5,00 &euro;</span></div></div>
+      <div class="pc" data-c="v" onclick="addC(this)"><div class="pn">Sp&auml;tzle</div><div class="pb"><span class="pp">14,00 &euro;</span></div></div>
+      <div class="pc" data-c="v" onclick="addC(this)"><div class="pn">Bratwurst Bites</div><div class="pb"><span class="pp">10.00 &euro;</span></div></div>
+      <div class="pc" data-c="t" onclick="openBSVariant('Goulash Soup','23,00 &euro;')"><div class="pn">Goulash Soup</div><div class="pb"><span class="pp">23,00 &euro;</span><i class="ti ti-list p-var"></i></div></div>
+      <div class="pc" data-c="t" onclick="addC(this)"><div class="pn">Black Forest Cake</div><div class="pb"><span class="pp">8,00 &euro;</span></div></div>
+      <div class="pc" onclick="openBSVariant('Roast Chicken','20,00 &euro;')"><div class="pn">Roast Chicken</div><div class="pb"><span class="pp">20,00 &euro;</span><i class="ti ti-list p-var"></i></div></div>
+      <div class="pc" data-c="t" onclick="addC(this)"><div class="pn">Currywurst</div><div class="pb"><span class="pp">12,00 &euro;</span></div></div>
+      <div class="pc" onclick="addC(this)"><div class="pn">Weissbier</div><div class="pb"><span class="pp">5,50 &euro;</span></div></div>
+      <div class="pc" onclick="addC(this)"><div class="pn">Pilsner</div><div class="pb"><span class="pp">4,50 &euro;</span></div></div>
+      <div class="pc" onclick="addC(this)"><div class="pn">Obatzda</div><div class="pb"><span class="pp">9,00 &euro;</span></div></div>
+      <div class="pc" onclick="openBSVariant('Schweinebraten','18,00 &euro;')"><div class="pn">Schweinebraten</div><div class="pb"><span class="pp">18,00 &euro;</span><i class="ti ti-list p-var"></i></div></div>
+      <div class="pc" onclick="addC(this)"><div class="pn">Apple Strudel</div><div class="pb"><span class="pp">7,50 &euro;</span></div></div>
+      <div class="pc" onclick="addC(this)"><div class="pn">Radler</div><div class="pb"><span class="pp">4,00 &euro;</span></div></div>
+    </div>
+  </div>
+  <div class="bbar"><div class="brow">
+    <div class="edit-fab" onclick="go('cart')"><i class="ti ti-pencil"></i><div class="badge" style="top:-6px;right:-6px;background:var(--error)" id="cBdg">5</div></div>
+    <button class="btn btn-p" onclick="go('cart')" id="pBtn">Place order (5)</button>
+  </div></div>
+</div>
+
+<!-- ===== S: MENU BAR ===== -->
+<div class="scr" id="s-menu-bar">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="abar back"><button class="ib" onclick="go('tables')"><i class="ti ti-arrow-left"></i></button><div class="abar-group"><div class="abar-title">New order</div><div class="abar-sub">Bar</div></div><button class="ib" onclick="go('search')"><i class="ti ti-search"></i></button><button class="ib" onclick="go('cart')"><i class="ti ti-shopping-cart"></i></button></div>
+  <div class="chips"><div class="chip chip-all on" onclick="fChip(this,'all')">All</div><div class="chip" data-chip-color onclick="fChip(this,'r')" style="--chip-color:#970000">&#127834;  Appetizers</div><div class="chip" data-chip-color onclick="fChip(this,'a')" style="--chip-color:#006723">&#127866;  Beers</div><div class="chip" data-chip-color onclick="fChip(this,'g')" style="--chip-color:#334158">&#127869;  Mains</div></div>
+  <div class="sub"><span>16 items</span><span class="sub-sort"><i class="ti ti-arrows-sort" style="font-size:14px"></i> Popular</span></div>
+  <div class="scroll"><div class="product-grid">
+    <div class="pc" data-c="r" onclick="addC(this)"><div class="pn">Pretzel with Butter</div><div class="pb"><span class="pp">10,00 &euro;</span></div></div>
+    <div class="pc" data-c="g" onclick="addC(this)"><div class="pn">J&auml;gerschnitzel</div><div class="pb"><span class="pp">25,00 &euro;</span><i class="ti ti-list p-var"></i></div></div>
+    <div class="pc" data-c="g" onclick="addC(this)"><div class="pn">Wiener schnitzel</div><div class="pb"><span class="pp">20,00 &euro;</span><i class="ti ti-list p-var"></i></div></div>
+    <div class="pc" data-c="r" onclick="addC(this)"><div class="pn">French Fries</div><div class="pb"><span class="pp">5,00 &euro;</span></div></div>
+    <div class="pc" data-c="g" onclick="addC(this)"><div class="pn">Sp&auml;tzle</div><div class="pb"><span class="pp">14,00 &euro;</span></div></div>
+    <div class="pc" data-c="r" onclick="addC(this)"><div class="pn">Bratwurst Bites</div><div class="pb"><span class="pp">10,00 &euro;</span></div></div>
+  </div></div>
+</div>
+
+<!-- ===== S: SEARCH ===== -->
+<div class="scr" id="s-search">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="abar back" style="gap:0"><button class="ib" onclick="goB()"><i class="ti ti-arrow-left"></i></button><input style="flex:1;border:none;background:none;font-size:18px;font-family:Inter,sans-serif;color:var(--on-surface);outline:none;letter-spacing:0.15px" value="Apple" id="sF"><button class="ib" onclick="document.getElementById('sF').value=''"><i class="ti ti-x"></i></button></div>
+  <div class="scroll">
+    <div style="padding:0 16px">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--outline-variant)"><i class="ti ti-history" style="font-size:20px;color:var(--on-surface-variant)"></i><div><div style="font-size:16px;color:var(--on-surface);letter-spacing:0.15px">Apple 11</div><div style="font-size:12px;color:var(--on-surface-variant);letter-spacing:0.4px">O1P2Q</div></div></div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--outline-variant)"><i class="ti ti-history" style="font-size:20px;color:var(--on-surface-variant)"></i><div><div style="font-size:16px;color:var(--on-surface);letter-spacing:0.15px">Apple 13 Pro</div><div style="font-size:12px;color:var(--on-surface-variant);letter-spacing:0.4px">X5Y6Z</div></div></div>
+    </div>
+    <div class="chips" style="margin-top:8px"><div class="chip chip-all on" onclick="fChip(this,'all')">All</div><div class="chip" data-chip-color onclick="fChip(this,'r')" style="--chip-color:#970000">&#127834;  Appetizers</div><div class="chip" data-chip-color onclick="fChip(this,'a')" style="--chip-color:#006723">&#127866;  Beers</div><div class="chip" data-chip-color onclick="fChip(this,'g')" style="--chip-color:#334158">&#127869;  Mains</div></div>
+    <div class="sub"><span>16 items</span><span class="sub-sort"><i class="ti ti-arrows-sort" style="font-size:14px"></i> Popular</span></div>
+    <div class="product-grid">
+      <div class="pc" data-c="r"><div class="pn">Pretzel with Butter</div><div class="pb"><span class="pp">10,00 &euro;</span></div></div>
+      <div class="pc" data-c="g"><div class="pn">J&auml;gerschnitzel</div><div class="pb"><span class="pp">25,00 &euro;</span><i class="ti ti-list p-var"></i></div></div>
+    </div>
+  </div>
+  <div style="margin:8px 16px;background:var(--inverse-surface);color:var(--inverse-on-surface);padding:14px 16px;border-radius:8px;font-size:14px;font-weight:500;text-align:center">Item added</div>
+</div>
+
+<!-- ===== S: CART ===== -->
+<div class="scr" id="s-cart">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="abar back"><button class="ib" onclick="go('menu')"><i class="ti ti-arrow-left"></i></button><div class="abar-group"><div class="abar-title">Table 1</div><div class="abar-sub">Indoor</div></div><button class="ib" onclick="go('customers')"><i class="ti ti-user-plus"></i></button><button class="ib"><i class="ti ti-trash"></i></button></div>
+  <div class="scroll">
+    <div class="fl">
+      <div class="fi" onclick="openBS()"><div class="li-body"><div class="li-t">Pretzel with Butter</div><div class="li-s">10,00 &euro; per item</div><div class="li-s12" style="margin-top:8px">Pommes (8,00 &euro;)</div><div class="li-s12" style="margin-top:4px">Ketcheup (8,00 &euro;)</div></div><div class="qty-c">1</div></div>
+      <div class="fi" onclick="openBS()"><div class="li-body"><div class="li-t">Pretzel with Butter</div><div class="li-s">10,00 &euro; per item</div></div><div class="qty-c">1</div></div>
+      <div class="fi" onclick="openBS()"><div class="li-body"><div class="li-t">Wiener schnitzel</div><div class="li-s">25,00 &euro; per item</div><div class="v-chip">Chicken</div></div><div class="qty-c">2</div></div>
+      <div class="fi" onclick="openBS()"><div class="li-body"><div class="li-t">Wiener schnitzel</div><div class="li-s">25,00 &euro; per item</div><div class="v-chip">Pork</div></div><div class="qty-c">1</div></div>
+      <div class="fi"><div class="li-body"><div class="li-t">Bratwurst Bites <i class="ti ti-note" style="font-size:14px;color:var(--on-surface-variant)"></i></div><div class="li-s">10,00 &euro; per item</div></div><div class="qty-c">1</div></div>
+    </div>
+  </div>
+  <div class="snack" id="oSnk"><i class="ti ti-circle-check" style="font-size:20px;color:var(--primary)"></i> Order placed successfully <span class="snack-a">Undo</span></div>
+  <div class="bbar">
+    <button class="btn btn-o" onclick="go('menu')"><i class="ti ti-circle-plus"></i> Add items</button>
+    <div class="brow">
+      <button class="btn btn-p" onclick="go('payment')"><i class="ti ti-receipt"></i> Checkout - 98,00 &euro;</button>
+      <button class="edit-fab" onclick="go('split')"><i class="ti ti-share"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== S: PAYMENT ===== -->
+<div class="scr" id="s-payment">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="abar back"><button class="ib" onclick="go('cart')"><i class="ti ti-arrow-left"></i></button><div class="abar-group"><div class="abar-title">Select payment method</div></div></div>
+  <div style="padding:16px 16px 0;text-align:center">
+    <div class="amt-l">Total amount</div>
+    <div style="font-size:36px;font-weight:700;color:#232E3D;line-height:48px;margin-top:8px">98,00 &euro;</div>
+  </div>
+  <div class="scroll" style="padding-top:24px"><div class="lg" style="gap:2px">
+    <div class="li" onclick="go('tipping')"><div class="pay-ic"><i class="ti ti-credit-card"></i></div><div class="li-body"><div class="li-t">Card</div></div><i class="ti ti-chevron-right" style="font-size:16px;color:var(--on-surface-variant)"></i></div>
+    <div class="li" onclick="go('enter-amount')"><div class="pay-ic"><i class="ti ti-coin-euro"></i></div><div class="li-body"><div class="li-t">Cash</div></div><i class="ti ti-chevron-right" style="font-size:16px;color:var(--on-surface-variant)"></i></div>
+    <div class="li" onclick="go('tipping')"><div class="pay-ic"><i class="ti ti-gift"></i></div><div class="li-body"><div class="li-t">Gift card</div></div><i class="ti ti-chevron-right" style="font-size:16px;color:var(--on-surface-variant)"></i></div>
+  </div></div>
+</div>
+
+<!-- ===== S: TIPPING ===== -->
+<div class="scr" id="s-tipping">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="abar back"><button class="ib" onclick="go('payment')"><i class="ti ti-arrow-left"></i></button><div class="abar-group"><div class="abar-title">Add a tip</div></div></div>
+  <div style="padding:8px 16px 0;display:flex;flex-direction:column;flex:1;gap:16px">
+    <div style="text-align:center">
+      <div class="amt-l">Total amount</div>
+      <div style="font-size:36px;font-weight:700;color:#232E3D;line-height:48px;margin-top:8px">98,00 &euro;</div>
+    </div>
+    <div class="tabs" id="tiTabs" style="border-bottom:1px solid var(--outline-variant);justify-content:center"><button class="tab on" onclick="st('tiTabs','tiP-pct',this)">Percent</button><button class="tab" onclick="st('tiTabs','tiP-fix',this)">Fixed amount</button></div>
+    <div class="tab-pane" id="tiP-pct" style="display:flex;flex-direction:column;flex:1;gap:8px">
+      <div style="display:flex;flex-direction:column;gap:8px;flex:1">
+        <div class="tip-card" onclick="go('success')"><div class="tc-title">+ 5%</div><div class="tc-sub">4,90 &euro;</div></div>
+        <div class="tip-card" onclick="go('success')"><div class="tc-title">+ 10%</div><div class="tc-sub">9,80 &euro;</div></div>
+        <div class="tip-card" onclick="go('success')"><div class="tc-title">+ 15%</div><div class="tc-sub">14,70 &euro;</div></div>
+        <div class="tip-card" onclick="go('success')"><div class="tc-title">Custom tip amount</div></div>
+      </div>
+      <button class="btn btn-p" style="justify-content:center" onclick="go('success')">No tip</button>
+    </div>
+    <div class="tab-pane" id="tiP-fix" style="display:none;flex-direction:column;flex:1;gap:8px">
+      <div style="display:flex;flex-direction:column;gap:8px;flex:1">
+        <div class="tip-card" onclick="go('success')"><div class="tc-title">+ 5 &euro;</div></div>
+        <div class="tip-card" onclick="go('success')"><div class="tc-title">+ 10 &euro;</div></div>
+        <div class="tip-card" onclick="go('success')"><div class="tc-title">+ 15 &euro;</div></div>
+        <div class="tip-card" onclick="go('success')"><div class="tc-title">Custom tip amount</div></div>
+      </div>
+      <button class="btn btn-p" style="justify-content:center" onclick="go('success')">No tip</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== S: SUCCESS ===== -->
+<div class="scr" id="s-success">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 16px">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;padding:40px 16px;width:100%">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+        <div class="suc-ic"><i class="ti ti-circle-check"></i></div>
+        <div style="font-size:16px;font-weight:500;color:#00AB99;letter-spacing:0.5px;line-height:24px">Payment successful</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;width:100%;gap:16px">
+        <div style="text-align:center">
+          <div style="font-size:14px;font-weight:400;color:var(--on-surface-variant);letter-spacing:0.25px;line-height:20px">Change</div>
+          <div style="font-size:36px;font-weight:700;color:var(--on-surface);line-height:48px;margin-top:4px">0,00 &euro;</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+          <div style="font-size:14px;font-weight:500;color:var(--on-surface-variant);letter-spacing:0.1px;line-height:20px">Tip: 2,00 &euro;</div>
+          <div style="font-size:14px;font-weight:500;color:var(--on-surface-variant);letter-spacing:0.1px;line-height:20px">Received: 100,00 &euro;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px">
+    <button class="btn btn-o" style="justify-content:center;gap:8px"><i class="ti ti-qrcode" style="font-size:24px"></i> Show QR code for reciept</button>
+    <button class="btn btn-o" style="justify-content:center;gap:8px"><i class="ti ti-file-text" style="font-size:24px"></i> Show receipt</button>
+  </div>
+  <div style="padding:16px;background:var(--surface-lowest)"><button class="btn btn-p" style="justify-content:center" onclick="go('tables')">Done</button></div>
+</div>
+
+<!-- ===== S: SPLIT BILL ===== -->
+<div class="scr" id="s-split">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="abar back"><button class="ib" onclick="go('cart')"><i class="ti ti-arrow-left"></i></button><div class="abar-group"><div class="abar-title">Split bill</div><div class="abar-sub">Open amount: 98,00 &euro;</div></div></div>
+  <div class="tabs" id="spTabs" style="border-bottom:1px solid var(--outline-variant)"><button class="tab on" onclick="st('spTabs','spP-it',this)">Split items</button><button class="tab" onclick="st('spTabs','spP-eq',this)">Split equally</button><button class="tab" onclick="st('spTabs','spP-am',this)">Split amount</button></div>
+
+  <!-- ── Split items tab ── -->
+  <div class="tab-pane" id="spP-it" style="display:flex;flex-direction:column;flex:1">
+    <div style="padding:16px;display:flex;flex-direction:column;gap:16px;flex:1;overflow:auto">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:14px;font-weight:600;color:var(--on-surface);letter-spacing:0.1px;line-height:20px">Select items to pay</div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <div class="li sp-chk" style="border-radius:8px 8px 4px 4px;padding:4px 16px 4px 2px;gap:2px" onclick="tChk(this)"><div style="padding:4px;display:flex;align-items:center;justify-content:center"><div class="oc"></div></div><div class="li-body"><div style="font-size:14px;font-weight:500;color:var(--on-surface);letter-spacing:0.25px;line-height:20px">Pretzel with Butter</div></div><div style="font-size:14px;font-weight:500;color:var(--on-surface);letter-spacing:0.25px;line-height:20px;white-space:nowrap">10,00 &euro;</div></div>
+          <div class="li sp-chk" style="border-radius:4px;padding:4px 16px 4px 2px;gap:2px" onclick="tChk(this)"><div style="padding:4px;display:flex;align-items:center;justify-content:center"><div class="oc"></div></div><div class="li-body"><div style="font-size:14px;font-weight:500;color:var(--on-surface);letter-spacing:0.25px;line-height:20px">Pretzel with Butter</div><div style="font-size:12px;font-weight:400;color:var(--on-surface-variant);letter-spacing:0.4px;line-height:16px;margin-top:2px">Pommes (8,00 &euro;)<br>Ketchup (8,00 &euro;)</div></div><div style="font-size:14px;font-weight:500;color:var(--on-surface);letter-spacing:0.25px;line-height:20px;white-space:nowrap">26,00 &euro;</div></div>
+          <div class="li sp-chk" style="border-radius:4px;padding:4px 16px 4px 2px;gap:2px" onclick="tChk(this)"><div style="padding:4px;display:flex;align-items:center;justify-content:center"><div class="oc"></div></div><div class="li-body"><div style="font-size:14px;font-weight:500;color:var(--on-surface);letter-spacing:0.25px;line-height:20px">Wiener schnitzel</div><div class="v-chip" style="margin-top:4px">Chicken</div></div><div style="font-size:14px;font-weight:500;color:var(--on-surface);letter-spacing:0.25px;line-height:20px;white-space:nowrap">25,00 &euro;</div></div>
+          <div class="li sp-chk" style="border-radius:4px;padding:4px 16px 4px 2px;gap:2px" onclick="tChk(this)"><div style="padding:4px;display:flex;align-items:center;justify-content:center"><div class="oc"></div></div><div class="li-body"><div style="font-size:14px;font-weight:500;color:var(--on-surface);letter-spacing:0.25px;line-height:20px">Wiener schnitzel</div><div class="v-chip" style="margin-top:4px">Pork</div></div><div style="font-size:14px;font-weight:500;color:var(--on-surface);letter-spacing:0.25px;line-height:20px;white-space:nowrap">25,00 &euro;</div></div>
+          <div class="li sp-chk" style="border-radius:4px 4px 8px 8px;padding:4px 16px 4px 2px;gap:2px" onclick="tChk(this)"><div style="padding:4px;display:flex;align-items:center;justify-content:center"><div class="oc"></div></div><div class="li-body"><div style="font-size:14px;font-weight:500;color:var(--on-surface);letter-spacing:0.25px;line-height:20px">Bratwurst Bites</div></div><div style="font-size:14px;font-weight:500;color:var(--on-surface);letter-spacing:0.25px;line-height:20px;white-space:nowrap">12,00 &euro;</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="bbar"><button class="btn btn-p" disabled id="spBtn" style="justify-content:center" onclick="go('payment')"><i class="ti ti-receipt"></i> Checkout</button></div>
+  </div>
+
+  <!-- ── Split equally tab ── -->
+  <div class="tab-pane" id="spP-eq" style="display:none;flex-direction:column;flex:1">
+    <div style="padding:16px;display:flex;flex-direction:column;gap:16px;flex:1;overflow:auto">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:14px;font-weight:600;color:var(--on-surface);letter-spacing:0.1px;line-height:20px">How many parts?</div>
+        <div class="qc"><button class="qb" onclick="spQ(-1)">&minus;</button><div class="qv" id="spQV">2</div><button class="qb" onclick="spQ(1)">+</button></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:14px;font-weight:600;color:var(--on-surface);letter-spacing:0.1px;line-height:20px">Select to pay</div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <div class="li sp-chk" style="border-radius:8px 8px 4px 4px;padding:4px 16px 4px 2px;gap:2px" onclick="tChk(this)"><div style="padding:4px;display:flex;align-items:center;justify-content:center"><div class="oc"></div></div><div class="li-body"><div style="font-size:14px;font-weight:500;color:var(--on-surface);letter-spacing:0.25px;line-height:20px">32,67 &euro;</div></div></div>
+          <div class="li sp-chk" style="border-radius:4px 4px 8px 8px;padding:4px 16px 4px 2px;gap:2px" onclick="tChk(this)"><div style="padding:4px;display:flex;align-items:center;justify-content:center"><div class="oc"></div></div><div class="li-body"><div style="font-size:14px;font-weight:500;color:var(--on-surface);letter-spacing:0.25px;line-height:20px">32,67 &euro;</div></div></div>
+        </div>
+      </div>
+      <!-- Paid section -->
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:4px;color:#00AB99;font-size:14px;font-weight:600"><i class="ti ti-circle-check" style="font-size:20px"></i> Paid</div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <div style="background:var(--surface-lowest);border-radius:8px;padding:12px 16px;display:flex;align-items:center;min-height:48px"><div style="font-size:14px;font-weight:500;color:var(--on-surface-variant);letter-spacing:0.25px;line-height:20px">32,67 &euro;</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="bbar"><button class="btn btn-p" disabled style="justify-content:center" onclick="go('payment')"><i class="ti ti-receipt"></i> Checkout</button></div>
+  </div>
+
+  <!-- ── Split amount tab ── -->
+  <div class="tab-pane" id="spP-am" style="display:none;flex-direction:column;flex:1">
+    <div style="padding:16px 16px 0;display:flex;flex-direction:column;align-items:center;flex:1">
+      <div style="text-align:center;padding:8px 0 24px">
+        <div style="font-size:12px;font-weight:400;color:var(--on-surface-variant);letter-spacing:0.4px;line-height:16px">Enter amount</div>
+        <div style="font-size:36px;font-weight:700;color:#232E3D;line-height:48px;margin-top:8px">0,00 &euro;</div>
+      </div>
+      <div class="numpad" style="padding:0;flex:1;align-content:start"><button class="nk">1</button><button class="nk">2</button><button class="nk">3</button><button class="nk">4</button><button class="nk">5</button><button class="nk">6</button><button class="nk">7</button><button class="nk">8</button><button class="nk">9</button><button class="nk">C</button><button class="nk">0</button><button class="nk"><i class="ti ti-backspace"></i></button></div>
+    </div>
+    <div class="bbar"><button class="btn btn-p" disabled style="justify-content:center" onclick="go('payment')"><i class="ti ti-receipt"></i> Checkout</button></div>
+  </div>
+</div>
+
+<!-- ===== S: ENTER AMOUNT RECEIVED ===== -->
+<div class="scr" id="s-enter-amount">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="abar back"><button class="ib" onclick="go('payment')"><i class="ti ti-arrow-left"></i></button><div class="abar-group"><div class="abar-title">Enter amount received</div></div></div>
+  <div style="padding:8px 16px 12px;display:flex;flex-direction:column;flex:1;gap:32px">
+    <div style="text-align:center">
+      <div class="amt-l">Total amount: 22,00 &euro;</div>
+      <div style="font-size:36px;font-weight:700;color:#232E3D;line-height:48px;margin-top:8px">0,00 &euro;</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;flex:1">
+      <div style="display:flex;align-items:center;justify-content:center;gap:6px">
+        <i class="ti ti-settings" style="font-size:18px;color:var(--on-surface)"></i>
+        <span style="font-size:14px;font-weight:600;color:var(--on-surface);letter-spacing:0.1px;line-height:20px">Quick suggestions</span>
+      </div>
+      <div class="sug-grid">
+        <div class="sug-card" onclick="go('tipping')">22,00 &euro;</div>
+        <div class="sug-card" onclick="go('tipping')">25,00 &euro;</div>
+        <div class="sug-card" onclick="go('tipping')">30,00 &euro;</div>
+        <div class="sug-card" onclick="go('tipping')">50,00 &euro;</div>
+        <div class="sug-card" onclick="go('tipping')">100,00 &euro;</div>
+        <div class="sug-card" onclick="go('custom-amount')">Custom amount</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== S: CUSTOM AMOUNT ===== -->
+<div class="scr" id="s-custom-amount">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="abar back"><button class="ib" onclick="go('enter-amount')"><i class="ti ti-arrow-left"></i></button><div class="abar-group"><div class="abar-title">Enter amount received</div></div></div>
+  <div style="padding:8px 16px 12px;display:flex;flex-direction:column;flex:1">
+    <div style="text-align:center">
+      <div class="amt-l">Enter custom amount</div>
+      <div style="font-size:36px;font-weight:700;color:#232E3D;line-height:48px;margin-top:8px">0,00 &euro;</div>
+      <div class="amt-l" style="margin-top:8px">Total amount: 22,00 &euro;</div>
+    </div>
+    <div style="padding:24px 8px;flex:1;display:flex;align-items:center">
+      <div class="numpad" style="padding:0"><button class="nk">1</button><button class="nk">2</button><button class="nk">3</button><button class="nk">4</button><button class="nk">5</button><button class="nk">6</button><button class="nk">7</button><button class="nk">8</button><button class="nk">9</button><button class="nk">C</button><button class="nk">0</button><button class="nk"><i class="ti ti-backspace"></i></button></div>
+    </div>
+    <button class="btn btn-p" style="justify-content:center" onclick="go('tipping')">Submit</button>
+  </div>
+</div>
+
+<!-- ===== S: CUSTOMERS ===== -->
+<div class="scr" id="s-customers">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="abar back"><button class="ib" onclick="go('cart')"><i class="ti ti-arrow-left"></i></button><div class="abar-group"><div class="abar-title">Select customer</div></div><button class="ib"><i class="ti ti-plus"></i></button></div>
+  <div class="scroll"><div class="lg">
+    <div class="li" onclick="go('cart')"><i class="ti ti-user" style="font-size:22px;color:var(--on-surface-variant)"></i><div class="li-body"><div class="li-t">Samuel Thompson</div></div></div>
+    <div class="li" onclick="go('cart')"><i class="ti ti-user" style="font-size:22px;color:var(--on-surface-variant)"></i><div class="li-body"><div class="li-t">Oliver Johnson</div></div></div>
+    <div class="li sel" onclick="go('cart')"><i class="ti ti-user" style="font-size:22px;color:var(--on-surface-variant)"></i><div class="li-body"><div class="li-t">Ethan Williams</div></div></div>
+    <div class="li" onclick="go('cart')"><i class="ti ti-user" style="font-size:22px;color:var(--on-surface-variant)"></i><div class="li-body"><div class="li-t">Lucas Brown</div></div></div>
+    <div class="li" onclick="go('cart')"><i class="ti ti-user" style="font-size:22px;color:var(--on-surface-variant)"></i><div class="li-body"><div class="li-t">Mason Davis</div></div></div>
+    <div class="li" onclick="go('cart')"><i class="ti ti-user" style="font-size:22px;color:var(--on-surface-variant)"></i><div class="li-body"><div class="li-t">Liam Miller</div></div></div>
+    <div class="li" onclick="go('cart')"><i class="ti ti-user" style="font-size:22px;color:var(--on-surface-variant)"></i><div class="li-body"><div class="li-t">Emily Johnson</div></div></div>
+    <div class="li" onclick="go('cart')"><i class="ti ti-user" style="font-size:22px;color:var(--on-surface-variant)"></i><div class="li-body"><div class="li-t">Sophia Brown</div></div></div>
+  </div></div>
+</div>
+
+<!-- ===== S: HISTORY ===== -->
+<div class="scr" id="s-history">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="abar back"><button class="ib" onclick="go('tables')"><i class="ti ti-arrow-left"></i></button><div class="abar-group"><div class="abar-title">History</div></div><button class="ib"><i class="ti ti-search"></i></button></div>
+  <div class="scroll">
+    <div class="sh blue">Today</div>
+    <div class="lg">
+      <div class="li" onclick="go('sale-detail')"><div class="h-ic"><i class="ti ti-credit-card"></i></div><div class="li-body"><div class="li-t">154</div><div class="li-s12">9:36 AM &bull; Table 1</div></div><div class="li-r">35,00 &euro; <i class="ti ti-chevron-right li-chev"></i></div></div>
+      <div class="li" onclick="go('sale-detail')"><div class="h-ic"><i class="ti ti-credit-card"></i></div><div class="li-body"><div class="li-t">153</div><div class="li-s12">9:36 AM &bull; Table 2</div></div><div class="li-r">18,00 &euro; <i class="ti ti-chevron-right li-chev"></i></div></div>
+    </div>
+    <div class="sh">Friday, 23 Oct 2025</div>
+    <div class="lg">
+      <div class="li" onclick="go('sale-detail')"><div class="h-ic"><i class="ti ti-device-mobile"></i></div><div class="li-body"><div class="li-t">152</div><div class="li-s12">9:36 AM &bull; Table 1</div></div><div class="li-r">20,00 &euro; <i class="ti ti-chevron-right li-chev"></i></div></div>
+      <div class="li" onclick="go('sale-detail')"><div class="h-ic"><i class="ti ti-credit-card"></i></div><div class="li-body"><div class="li-t">151</div><div class="li-s12">9:36 PM &bull; Table 1</div></div><div class="li-r">102,00 &euro; <i class="ti ti-chevron-right li-chev"></i></div></div>
+      <div class="li" onclick="go('sale-detail')"><div class="h-ic"><i class="ti ti-credit-card"></i></div><div class="li-body"><div class="li-t">150</div><div class="li-s12">7:15 PM &bull; Table 1</div></div><div class="li-r">52,50 &euro; <i class="ti ti-chevron-right li-chev"></i></div></div>
+      <div class="li" onclick="go('sale-detail')"><div class="h-ic"><i class="ti ti-device-mobile"></i></div><div class="li-body"><div class="li-t">149</div><div class="li-s12">9:36 AM &bull; Table 1</div></div><div class="li-r">122,00 &euro; <i class="ti ti-chevron-right li-chev"></i></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== S: SALE DETAIL ===== -->
+<div class="scr" id="s-sale-detail">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="abar back"><button class="ib" onclick="go('history')"><i class="ti ti-arrow-left"></i></button><div class="abar-group"><div class="abar-title">Sale: 154</div></div></div>
+  <div class="scroll">
+    <div class="lg"><div class="li" style="flex-direction:column;align-items:stretch;gap:8px;cursor:default">
+      <div style="display:flex;justify-content:space-between"><span class="li-t">Details</span><span class="li-s12">10/2/25 9:29 AM</span></div>
+      <div style="border-top:1px solid var(--outline-variant);padding-top:8px;display:flex;flex-direction:column;gap:6px;font-size:14px;letter-spacing:0.25px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--on-surface-variant)">Receipt number</span><span style="font-weight:500">154</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--on-surface-variant)">Register number</span><span style="font-weight:500">999292</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--on-surface-variant)">Branch</span><span style="font-weight:500">1</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--on-surface-variant)">Cashier</span><span style="font-weight:500">Will George</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--on-surface-variant)">Balance number</span><span style="font-weight:500">14</span></div>
+      </div>
+    </div></div>
+    <div class="sh">Payment types</div>
+    <div class="lg"><div class="li" style="cursor:default"><div class="li-body"><div class="li-t">Card</div></div><div class="li-r">35,00 &euro;</div></div></div>
+    <div class="sh">Items</div>
+    <div class="lg">
+      <div class="li" style="cursor:default"><div class="li-body"><div class="li-t">Pretzel with Butter</div><div class="li-s12">x2</div></div><div class="li-r">20,00 &euro;</div></div>
+      <div class="li" style="cursor:default"><div class="li-body"><div class="li-t">French Fries</div><div class="li-s12">x1</div></div><div class="li-r">5,00 &euro;</div></div>
+      <div class="li" style="cursor:default"><div class="li-body"><div class="li-t">Bratwurst Bites</div><div class="li-s12">x1</div></div><div class="li-r">10,00 &euro;</div></div>
+    </div>
+  </div>
+  <div class="bbar"><div class="brow"><button class="btn btn-o" onclick="sDlg('dlg-cancel')">Cancel sale</button><button class="btn btn-e" onclick="sDlg('dlg-refund')">Refund</button></div></div>
+</div>
+
+<!-- ===== S: ERROR ===== -->
+<div class="scr" id="s-error">
+  <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
+  <div class="empty">
+    <div style="width:56px;height:56px;border-radius:12px;background:var(--error-container);display:flex;align-items:center;justify-content:center"><i class="ti ti-alert-circle" style="font-size:28px;color:var(--error)"></i></div>
+    <div style="font-size:20px;font-weight:600;color:var(--on-surface)">Can't reach the payment terminal</div>
+    <div style="font-size:16px;color:var(--on-surface-variant);letter-spacing:0.15px;line-height:24px">We couldn't connect to the terminal from this device.</div>
+  </div>
+  <div class="bbar"><div class="brow"><button class="btn btn-o" onclick="go('payment')">Go back</button><button class="btn btn-p">Retry</button></div></div>
+</div>
+
+</div>
+
+<script>
+const stk=[];
+function go(id){const c=document.querySelector('.scr.active');if(c){stk.push(c.id.replace('s-',''));c.classList.remove('active');}const n=document.getElementById('s-'+id);if(n)n.classList.add('active');closeBS();hideMenu();location.hash=id;if(id==='syncing')setTimeout(()=>go('staff-login'),2000);}
+window.addEventListener('hashchange',function(){const h=location.hash.replace('#','');if(h){const c=document.querySelector('.scr.active');if(c)c.classList.remove('active');const n=document.getElementById('s-'+h);if(n)n.classList.add('active');}});
+window.addEventListener('DOMContentLoaded',function(){const h=location.hash.replace('#','');if(h){const c=document.querySelector('.scr.active');if(c)c.classList.remove('active');const n=document.getElementById('s-'+h);if(n)n.classList.add('active');}
+  if(h==='syncing')setTimeout(()=>go('staff-login'),2000);
+  if(h==='cart'&&stk[stk.length-1]==='menu'){const s=document.getElementById('oSnk');s.classList.add('show');setTimeout(()=>s.classList.remove('show'),3000);}
+});
+function goB(){if(stk.length){const p=stk.pop();const c=document.querySelector('.scr.active');if(c)c.classList.remove('active');document.getElementById('s-'+p).classList.add('active');}}
+
+function st(barId,paneId,btn){const b=document.getElementById(barId);b.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));btn.classList.add('on');b.parentElement.querySelectorAll('.tab-pane').forEach(p=>{p.style.display='none';});const p=document.getElementById(paneId);if(p){p.style.display='flex';p.style.flexDirection='column';p.style.flex='1';}}
+
+function showMenu(){document.getElementById('menuOv').classList.add('show');}
+function hideMenu(){document.getElementById('menuOv').classList.remove('show');}
+function openBS(){document.getElementById('bsBg').classList.add('show');document.getElementById('bsProduct').classList.add('show');}
+function closeBS(){document.getElementById('bsBg').classList.remove('show');document.getElementById('bsProduct').classList.remove('show');}
+
+/* --- Price helpers --- */
+let bsBasePrice=0;
+let bsMode='simple'; // 'simple' or 'variant'
+function parsePrice(s){return parseFloat(s.replace(/[^\d,\.]/g,'').replace(',','.'));}
+function fmtPrice(n){return n.toFixed(2).replace('.',',')+' \u20AC';}
+
+function calcBSTotal(){
+  let addons=0;
+  var container=bsMode==='variant'?document.getElementById('bsAddonsVariant'):document.getElementById('bsAddonsSimple');
+  container.querySelectorAll('.oi.sel').forEach(function(el){addons+=parseFloat(el.dataset.addon||0);});
+  var total=(bsBasePrice+addons)*sv;
+  document.getElementById('bsTotal').textContent=fmtPrice(total);
+}
+
+function resetAddons(container){
+  container.querySelectorAll('.oi').forEach(function(el,i){
+    if(i===0){el.classList.add('sel');var c=el.querySelector('.oc');if(c)c.classList.add('on');}
+    else{el.classList.remove('sel');var c=el.querySelector('.oc');if(c)c.classList.remove('on');}
+  });
+}
+
+function resetMeatOptions(){
+  var sec=document.getElementById('bsMeatSection');
+  sec.querySelectorAll('.oi').forEach(function(el,i){
+    if(i===0){el.classList.add('sel');var r=el.querySelector('.or');if(r)r.classList.add('on');}
+    else{el.classList.remove('sel');var r=el.querySelector('.or');if(r)r.classList.remove('on');}
+  });
+}
+
+function openBSSimple(name,price){
+  document.getElementById('bsTitle').innerHTML=name;
+  document.getElementById('bsPrice').innerHTML=price;
+  document.getElementById('bsMeatSection').style.display='none';
+  document.getElementById('bsAddonsVariant').style.display='none';
+  document.getElementById('bsAddonsSimple').style.display='';
+  bsBasePrice=parsePrice(price);bsMode='simple';
+  sv=1;document.getElementById('sqv').textContent='1';
+  resetAddons(document.getElementById('bsAddonsSimple'));
+  calcBSTotal();
+  openBS();
+}
+function openBSVariant(name,price){
+  document.getElementById('bsTitle').innerHTML=name;
+  document.getElementById('bsPrice').innerHTML=price;
+  document.getElementById('bsMeatSection').style.display='';
+  document.getElementById('bsAddonsVariant').style.display='';
+  document.getElementById('bsAddonsSimple').style.display='none';
+  bsBasePrice=parsePrice(price);bsMode='variant';
+  sv=1;document.getElementById('sqv').textContent='1';
+  resetMeatOptions();
+  resetAddons(document.getElementById('bsAddonsVariant'));
+  calcBSTotal();
+  openBS();
+}
+
+function addToOrder(){
+  cc+=sv;
+  document.getElementById('cBdg').textContent=cc;
+  document.getElementById('pBtn').textContent='Place order ('+cc+')';
+  closeBS();
+}
+function sDlg(id){document.getElementById(id).classList.add('show');}
+function hDlg(id){document.getElementById(id).classList.remove('show');}
+
+let pv='';
+function upd(){document.querySelectorAll('#pd .dot').forEach((d,i)=>d.classList.toggle('on',i<pv.length));}
+function pk(n){if(pv.length<4){pv+=n;upd();if(pv.length===4)setTimeout(()=>go('tables'),300);}}
+function pb(){pv=pv.slice(0,-1);upd();}
+function pc(){pv='';upd();}
+
+let sv=1;function sqty(d){sv=Math.max(1,sv+d);document.getElementById('sqv').textContent=sv;calcBSTotal();}
+let spv=2;function spQ(d){spv=Math.max(2,spv+d);document.getElementById('spQV').textContent=spv;}
+
+function srad(el){const p=el.parentElement;p.querySelectorAll('.oi').forEach(o=>{o.classList.remove('sel');const r=o.querySelector('.or');if(r)r.classList.remove('on');});el.classList.add('sel');const r=el.querySelector('.or');if(r)r.classList.add('on');}
+function schk(el){el.classList.toggle('sel');const c=el.querySelector('.oc');if(c)c.classList.toggle('on');calcBSTotal();}
+function tChk(el){const c=el.querySelector('.oc');if(c){c.classList.toggle('on');el.classList.toggle('sel');}const pn=el.closest('.tab-pane');if(pn){const any=pn.querySelectorAll('.oc.on').length>0;const b=pn.querySelector('.btn-p');if(b)b.disabled=!any;}}
+
+let my=false;function tglMy(){my=!my;document.getElementById('tAll').style.display=my?'none':'';document.getElementById('tMy').style.display=my?'':'none';document.getElementById('myTgl').textContent=my?'Show all tables':'Show my tables only';}
+let chipsExpanded=false;function toggleChips(){chipsExpanded=!chipsExpanded;document.querySelectorAll('.chip-extra').forEach(c=>c.style.display=chipsExpanded?'':'none');document.getElementById('chipToggle').textContent=chipsExpanded?'Show less':'Show more (3)';}
+function fChip(el,cat){
+  const chips=el.closest('.chips-row')||el.closest('.chips');
+  if(!chips)return;
+  chips.querySelectorAll('.chip').forEach(c=>{c.classList.remove('on');});
+  el.classList.add('on');
+}
+
+let cc=5;
+function addC(card){
+  cc++;
+  document.getElementById('cBdg').textContent=cc;
+  document.getElementById('pBtn').textContent='Place order ('+cc+')';
+  if(card){card.classList.add('inc');setTimeout(function(){card.classList.remove('inc');},400);}
+}
+</script>
+</body>
+</html>
