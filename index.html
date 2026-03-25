@@ -775,19 +775,15 @@ body { background: #111; display: flex; justify-content: center; align-items: ce
   <div class="sbar"><span>9:30</span><div class="sbar-r"><i class="ti ti-wifi"></i><i class="ti ti-antenna-bars-5"></i><i class="ti ti-battery-3"></i></div></div>
   <div class="abar back"><button class="ib" onclick="go('tables')"><i class="ti ti-arrow-left"></i></button><div class="abar-group"><div class="abar-title">Table 1</div><div class="abar-sub">Indoor</div></div><button class="ib" onclick="go('customers')"><i class="ti ti-user-plus"></i></button><button class="ib"><i class="ti ti-trash"></i></button></div>
   <div class="scroll">
-    <div class="fl">
-      <div class="fi" onclick="openBS()"><div class="li-body"><div class="li-t">Pretzel with Butter</div><div class="li-s">10,00 &euro; per item</div><div class="li-s12" style="margin-top:8px">Pommes (8,00 &euro;)</div><div class="li-s12" style="margin-top:4px">Ketcheup (8,00 &euro;)</div></div><div class="qty-c">1</div></div>
-      <div class="fi" onclick="openBS()"><div class="li-body"><div class="li-t">Pretzel with Butter</div><div class="li-s">10,00 &euro; per item</div></div><div class="qty-c">1</div></div>
-      <div class="fi" onclick="openBS()"><div class="li-body"><div class="li-t">Wiener schnitzel</div><div class="li-s">25,00 &euro; per item</div><div class="v-chip">Chicken</div></div><div class="qty-c">2</div></div>
-      <div class="fi" onclick="openBS()"><div class="li-body"><div class="li-t">Wiener schnitzel</div><div class="li-s">25,00 &euro; per item</div><div class="v-chip">Pork</div></div><div class="qty-c">1</div></div>
-      <div class="fi"><div class="li-body"><div class="li-t">Bratwurst Bites <i class="ti ti-note" style="font-size:14px;color:var(--on-surface-variant)"></i></div><div class="li-s">10,00 &euro; per item</div></div><div class="qty-c">1</div></div>
+    <div class="fl" id="cartList">
+      <div style="text-align:center;padding:40px 0;color:var(--on-surface-variant);font-size:14px;letter-spacing:0.25px;line-height:20px">No orders yet</div>
     </div>
   </div>
   <div class="snack" id="oSnk"><i class="ti ti-circle-check" style="font-size:20px;color:var(--primary)"></i> Order placed successfully <span class="snack-a">Undo</span></div>
   <div class="bbar">
-    <button class="btn btn-o" onclick="go('menu')"><i class="ti ti-circle-plus"></i> Add items</button>
+    <button class="btn btn-o" id="cartAddBtn" onclick="go('menu')"><i class="ti ti-circle-plus"></i> Add items</button>
     <div class="brow">
-      <button class="btn btn-p" onclick="go('payment')"><i class="ti ti-receipt"></i> Checkout - 98,00 &euro;</button>
+      <button class="btn btn-p" id="cartCheckoutBtn" onclick="go('payment')"><i class="ti ti-receipt"></i> Checkout - 0,00 &euro;</button>
       <button class="edit-fab" onclick="go('split')"><i class="ti ti-share"></i></button>
     </div>
   </div>
@@ -1049,7 +1045,7 @@ body { background: #111; display: flex; justify-content: center; align-items: ce
 
 <script>
 const stk=[];
-function go(id){const c=document.querySelector('.scr.active');if(c){stk.push(c.id.replace('s-',''));c.classList.remove('active');}const n=document.getElementById('s-'+id);if(n)n.classList.add('active');closeBS();hideMenu();location.hash=id;if(id==='syncing')setTimeout(()=>go('staff-login'),2000);}
+function go(id){const c=document.querySelector('.scr.active');if(c){stk.push(c.id.replace('s-',''));c.classList.remove('active');}const n=document.getElementById('s-'+id);if(n)n.classList.add('active');closeBS();hideMenu();location.hash=id;if(id==='syncing')setTimeout(()=>go('staff-login'),2000);if(id==='menu')resetMenuFilter();if(id==='cart')renderCart();}
 window.addEventListener('hashchange',function(){const h=location.hash.replace('#','');if(h){const c=document.querySelector('.scr.active');if(c)c.classList.remove('active');const n=document.getElementById('s-'+h);if(n)n.classList.add('active');}});
 window.addEventListener('DOMContentLoaded',function(){const h=location.hash.replace('#','');if(h){const c=document.querySelector('.scr.active');if(c)c.classList.remove('active');const n=document.getElementById('s-'+h);if(n)n.classList.add('active');}
   if(h==='syncing')setTimeout(()=>go('staff-login'),2000);
@@ -1123,12 +1119,27 @@ function addToOrder(){
   var name=document.getElementById('bsTitle').textContent;
   var price=bsBasePrice;
   var addons=0;
+  var addonNames=[];
+  var variant='';
+  /* Capture selected meat option */
+  if(bsMode==='variant'){
+    var meatSel=document.querySelector('#bsMeatSection .oi.sel .oi-l');
+    if(meatSel)variant=meatSel.textContent;
+  }
+  /* Capture selected addons */
   var container=bsMode==='variant'?document.getElementById('bsAddonsVariant'):document.getElementById('bsAddonsSimple');
-  container.querySelectorAll('.oi.sel').forEach(function(el){addons+=parseFloat(el.dataset.addon||0);});
+  container.querySelectorAll('.oi.sel').forEach(function(el){
+    addons+=parseFloat(el.dataset.addon||0);
+    var lbl=el.querySelector('.oi-l');
+    var pr=el.querySelector('.oi-p');
+    if(lbl)addonNames.push(lbl.textContent+(pr?' ('+pr.textContent.replace('+','').trim()+')':''));
+  });
   var unitPrice=price+addons;
+  /* Build unique key including variant */
+  var key=name+(variant?(' - '+variant):'');
   var found=null;
-  for(var i=0;i<order.length;i++){if(order[i].name===name&&order[i].price===unitPrice){found=order[i];break;}}
-  if(found){found.qty+=sv;}else{order.push({name:name,price:unitPrice,qty:sv});}
+  for(var i=0;i<order.length;i++){if(order[i].key===key){found=order[i];break;}}
+  if(found){found.qty+=sv;}else{order.push({key:key,name:name,price:unitPrice,qty:sv,variant:variant,addons:addonNames});}
   updateUI();
   closeBS();
 }
@@ -1189,7 +1200,7 @@ function syncCardBadges(){
     var name=card.dataset.name;
     if(!name)return;
     var totalQty=0;
-    order.forEach(function(o){if(o.name===name||o.name.indexOf(name)===0)totalQty+=o.qty;});
+    order.forEach(function(o){if(o.name===name)totalQty+=o.qty;});
     var counter=card.querySelector('.pc-counter');
     if(totalQty>0){
       card.classList.add('inc');
@@ -1222,14 +1233,14 @@ function updateUI(){
 
 function addItem(card,name,price){
   var found=null;
-  for(var i=0;i<order.length;i++){if(order[i].name===name){found=order[i];break;}}
-  if(found){found.qty++;}else{order.push({name:name,price:price,qty:1});}
+  for(var i=0;i<order.length;i++){if(order[i].key===name){found=order[i];break;}}
+  if(found){found.qty++;}else{order.push({key:name,name:name,price:price,qty:1,variant:'',addons:[]});}
   updateUI();
 }
 
-function changeQty(name,delta){
+function changeQty(key,delta){
   for(var i=0;i<order.length;i++){
-    if(order[i].name===name){
+    if(order[i].key===key){
       order[i].qty+=delta;
       if(order[i].qty<=0){order.splice(i,1);}
       break;
@@ -1249,19 +1260,35 @@ function renderEditOrder(){
   order.forEach(function(item,idx){
     var first=idx===0;var last=idx===order.length-1;var only=order.length===1;
     var rad=only?'8px':first?'8px 8px 2px 2px':last?'2px 2px 8px 8px':'2px';
+    var ek=item.key.replace(/'/g,"\\'");
     html+='<div style="display:flex;align-items:center;padding:12px 8px 12px 16px;background:var(--surface);border-radius:'+rad+';min-height:56px;box-sizing:border-box">';
     html+='<div style="flex:1;min-width:0">';
     html+='<div style="font-size:14px;font-weight:500;color:var(--on-surface);letter-spacing:0.1px;line-height:20px">'+item.name+'</div>';
-    html+='<div style="font-size:12px;font-weight:400;color:var(--on-surface-variant);letter-spacing:0.4px;line-height:16px;margin-top:4px">'+fmtPrice(item.price)+'</div>';
+    html+='<div style="font-size:12px;font-weight:400;color:var(--on-surface-variant);letter-spacing:0.4px;line-height:16px;margin-top:4px">\u20AC'+item.price.toFixed(2).replace('.',',')+'</div>';
+    /* Variant chip */
+    if(item.variant){
+      html+='<div style="display:inline-block;margin-top:4px;padding:2px 8px;border-radius:4px;background:var(--surface-container);font-size:11px;font-weight:500;color:var(--on-surface);letter-spacing:0.5px;line-height:16px">'+item.variant+'</div>';
+    }
+    /* Addon details — matching Figma: note icon + blue text */
+    if(item.addons&&item.addons.length>0){
+      html+='<div style="display:flex;gap:6px;align-items:center;margin-top:4px">';
+      html+='<i class="ti ti-note" style="font-size:16px;color:var(--primary)"></i>';
+      html+='<span style="font-size:12px;font-weight:500;color:var(--primary);letter-spacing:0.4px;line-height:16px">'+item.addons.join(', ')+'</span>';
+      html+='</div>';
+    }
+    /* Add note link for items without addons */
+    if(!item.addons||item.addons.length===0){
+      html+='<div style="margin-top:4px;font-size:12px;font-weight:500;color:var(--primary);letter-spacing:0.4px;line-height:16px;cursor:pointer">Add note</div>';
+    }
     html+='</div>';
     html+='<div style="display:flex;align-items:center;gap:0">';
     if(item.qty===1){
-      html+='<button class="ib" style="width:48px;height:48px;font-size:20px;color:var(--on-surface-variant)" onclick="changeQty(\''+item.name.replace(/'/g,"\\'")+'\',-1)"><i class="ti ti-trash"></i></button>';
+      html+='<button class="ib" style="width:48px;height:48px;font-size:20px;color:var(--on-surface-variant)" onclick="changeQty(\''+ek+'\',-1)"><i class="ti ti-trash"></i></button>';
     } else {
-      html+='<button class="ib" style="width:48px;height:48px" onclick="changeQty(\''+item.name.replace(/'/g,"\\'")+'\',-1)"><div style="width:32px;height:32px;border-radius:100px;border:1px solid var(--outline-variant);display:flex;align-items:center;justify-content:center;background:var(--surface-lowest)"><i class="ti ti-minus" style="font-size:20px;color:var(--on-surface)"></i></div></button>';
+      html+='<button class="ib" style="width:48px;height:48px" onclick="changeQty(\''+ek+'\',-1)"><div style="width:32px;height:32px;border-radius:100px;border:1px solid var(--outline-variant);display:flex;align-items:center;justify-content:center;background:var(--surface-lowest)"><i class="ti ti-minus" style="font-size:20px;color:var(--on-surface)"></i></div></button>';
     }
     html+='<div style="width:20px;text-align:center;font-size:14px;font-weight:600;color:#000;letter-spacing:0.1px;line-height:20px">'+item.qty+'</div>';
-    html+='<button class="ib" style="width:48px;height:48px" onclick="changeQty(\''+item.name.replace(/'/g,"\\'")+'\',1)"><div style="width:32px;height:32px;border-radius:100px;border:1px solid var(--outline-variant);display:flex;align-items:center;justify-content:center;background:var(--surface-lowest)"><i class="ti ti-plus" style="font-size:20px;color:var(--on-surface)"></i></div></button>';
+    html+='<button class="ib" style="width:48px;height:48px" onclick="changeQty(\''+ek+'\',1)"><div style="width:32px;height:32px;border-radius:100px;border:1px solid var(--outline-variant);display:flex;align-items:center;justify-content:center;background:var(--surface-lowest)"><i class="ti ti-plus" style="font-size:20px;color:var(--on-surface)"></i></div></button>';
     html+='</div></div>';
   });
   html+='</div>';
@@ -1278,14 +1305,58 @@ function closeEditOrder(){
   document.getElementById('eoSheet').classList.remove('show');
 }
 
+var placedOrders=[];
 function placeOrder(){
   closeEditOrder();closeBS();
+  /* Move current order items into placed orders */
+  order.forEach(function(item){
+    var found=null;
+    for(var i=0;i<placedOrders.length;i++){if(placedOrders[i].key===item.key){found=placedOrders[i];break;}}
+    if(found){found.qty+=item.qty;}
+    else{placedOrders.push({key:item.key,name:item.name,price:item.price,qty:item.qty,variant:item.variant,addons:item.addons});}
+  });
   order=[];
   updateUI();
   renderEditOrder();
   go('cart');
   var s=document.getElementById('oSnk');
   if(s){s.classList.add('show');setTimeout(function(){s.classList.remove('show');},2500);}
+}
+
+function resetMenuFilter(){
+  activeFilter='all';
+  var container=document.getElementById('chipsContainer');
+  if(!container)return;
+  container.querySelectorAll('.chip').forEach(function(c){c.classList.remove('on');});
+  var allChip=container.querySelector('.chip-all');
+  if(allChip)allChip.classList.add('on');
+  filterMenu();
+}
+
+function renderCart(){
+  var list=document.getElementById('cartList');
+  if(!list)return;
+  if(placedOrders.length===0)return;
+  var total=0;
+  var html='';
+  placedOrders.forEach(function(item){
+    total+=item.price*item.qty;
+    html+='<div class="fi"><div class="li-body"><div class="li-t">'+item.name+'</div><div class="li-s">'+fmtPrice(item.price)+' per item</div>';
+    if(item.variant){
+      html+='<div class="v-chip">'+item.variant+'</div>';
+    }
+    if(item.addons&&item.addons.length>0){
+      item.addons.forEach(function(a){
+        html+='<div class="li-s12" style="margin-top:4px">'+a+'</div>';
+      });
+    }
+    html+='</div><div class="qty-c">'+item.qty+'</div></div>';
+  });
+  list.innerHTML=html;
+  var cb=document.getElementById('cartCheckoutBtn');
+  if(cb){cb.innerHTML='<i class="ti ti-receipt"></i> Checkout - '+fmtPrice(total);}
+  var addBtn=document.getElementById('cartAddBtn');
+  if(addBtn)addBtn.style.display='';
 }
 </script>
 </body>
